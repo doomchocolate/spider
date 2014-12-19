@@ -15,7 +15,7 @@ _NEWS_TABLE_NAME = "news"
 
 class BaiduNewsSpider(BaseSpider):
     # 创建新闻表的命令
-    _CREATE_COMMAND = 'CREATE TABLE IF NOT EXISTS `test`.`%s` (`id` INT UNSIGNED NOT NULL AUTO_INCREMENT, `news_id` INT UNSIGNED NOT NULL,  `create_time` DATETIME NULL,  `title` VARCHAR(255) NULL,  `summary` MEDIUMTEXT NULL,  `content` MEDIUMTEXT NULL,  `thumbnails` TEXT NULL,  `source` TEXT NULL,  `deploy_status` INT NULL DEFAULT 0,  PRIMARY KEY (`id`),  UNIQUE INDEX `id_UNIQUE` (`id` ASC))'%_NEWS_TABLE_NAME
+    _CREATE_COMMAND = 'CREATE TABLE IF NOT EXISTS `%s` (`id` INT UNSIGNED NOT NULL AUTO_INCREMENT, `news_id` INT UNSIGNED NOT NULL,  `create_time` DATETIME NULL,  `title` VARCHAR(255) NULL,  `summary` MEDIUMTEXT NULL,  `content` MEDIUMTEXT NULL,  `thumbnails` TEXT NULL,  `source` TEXT NULL,  `deploy_status` INT NULL DEFAULT 0,  PRIMARY KEY (`id`),  UNIQUE INDEX `id_UNIQUE` (`id` ASC))'%_NEWS_TABLE_NAME
 
     def __init__(self):
         BaseSpider.__init__(self, BaiduNewsSpider._CREATE_COMMAND)
@@ -140,8 +140,8 @@ def main():
     # print spider.isInTable("news.bak", "id", 0)
 
 if __name__ == "__main__":
-    if len(sys.argv) == 1:
-        exit(1)
+    # if len(sys.argv) == 1:
+    #     exit(1)
 
     reload(sys)
     sys.setdefaultencoding('utf-8')

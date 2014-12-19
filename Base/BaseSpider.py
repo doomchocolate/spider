@@ -27,7 +27,7 @@ class BaseSpider:
             if platform.system() == 'Windows':
                 self.mysqlConn=MySQLdb.connect(host="localhost",user="root", passwd="123456",db="test",charset="utf8")
             else:
-                self.mysqlConn=MySQLdb.connect(host="localhost",user=Constants.MYSQL_PASSPORT,passwd=Constants.MYSQL_PASSWORD,db=Constants.MYSQL_DATABASE,charset="utf8")
+                self.mysqlConn=MySQLdb.connect(host=Constants.MYSQL_HOST,user=Constants.MYSQL_PASSPORT,passwd=Constants.MYSQL_PASSWORD,db=Constants.MYSQL_DATABASE,charset="utf8")
             self.mysqlCur = self.mysqlConn.cursor()
         except MySQLdb.Error,e:
              print "Mysql Error %d: %s" % (e.args[0], e.args[1])
