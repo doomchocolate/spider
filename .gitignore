@@ -1,0 +1,10 @@
+# python class files
+*.pyc
+
+
+# Log Files
+*.log
+
+# 
+cache/
+media/
