@@ -76,15 +76,28 @@ class BaseSpider:
         return open(target_path).read()
 
 
-    def getTableCount(self, tablename):
+    def getTableCount(self, tableName):
         value = 0
         try:
-            print self.mysqlCur.execute("select count(*) from "+tablename)
+            self.mysqlCur.execute("select count(*) from `%s`"%tableName)
             value = self.mysqlCur.fetchone()[0]
         except Exception, e:
             value = -1
 
         return value
+
+    # 检查某个值是否已经存在
+    def isInTable(self, tableName, key, value):
+        command = 'select count(id) from `%s` where `%s`="%s"'%(tableName, key, str(value))
+        inTable = False
+        try:
+            self.mysqlCur.execute(command)
+            if self.mysqlCur.fetchone()[0] > 0:
+                inTable = True
+        except Exception, e:
+            print e
+
+        return inTable
 
 
     def insert(self, command, value):
@@ -103,11 +116,13 @@ class BaseSpider:
         return result
 
     def finish(self):
+        if self.mysqlConn != None:
+            self.mysqlConn.commit()
+
         if self.mysqlCur != None:
             self.mysqlCur.close()
 
         if self.mysqlConn != None:
-            self.mysqlConn.commit()
             self.mysqlConn.close()
 
         self.mysqlCur = None

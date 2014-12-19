@@ -18,6 +18,14 @@ class BaiduNewsInfo:
         self.weights = infos.get("weights", 0)
         self.content = ""
 
+    def __cmp__(self, other):
+        if other.create_time == self.create_time:
+            return 0
+        elif other.create_time < self.create_time:
+            return 1
+        else:
+            return -1
+
     def __str__(self):
         result = []
         result.append("News Info:")
@@ -48,9 +56,27 @@ class BaiduNewsInfo:
 
     def toTuple(self):
         return (
+            self.id,
             self.create_time,
             self.title, 
             self.excerpt, 
             self.content,
             self.thumbnails,
             self.source)
+
+# news1 = BaiduNewsInfo({})
+# news1.create_time = "2014-12-12 18:05:16"
+
+# news2 = BaiduNewsInfo({})
+# news2.create_time = "2014-12-18 18:45:59"
+
+# news3= BaiduNewsInfo({})
+# news3.create_time = "2014-12-11 16:02:16"
+
+# a = [news1, news2, news3]
+# a.sort()
+
+# for i in a:
+#     print i
+
+

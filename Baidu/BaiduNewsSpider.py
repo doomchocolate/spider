@@ -11,9 +11,11 @@ import CommonUtils
 from Base.BaseSpider import BaseSpider
 from BaiduNewsClass import BaiduNewsInfo
 
+_NEWS_TABLE_NAME = "news"
+
 class BaiduNewsSpider(BaseSpider):
     # 创建新闻表的命令
-    _CREATE_COMMAND = 'CREATE TABLE IF NOT EXISTS `test`.`news` (`id` INT UNSIGNED NOT NULL AUTO_INCREMENT, `news_id` INT UNSIGNED NOT NULL,  `create_time` DATETIME NULL,  `title` VARCHAR(255) NULL,  `summary` MEDIUMTEXT NULL,  `content` MEDIUMTEXT NULL,  `thumbnails` TEXT NULL,  `source` TEXT NULL,  `deploy_status` INT NULL DEFAULT 0,  PRIMARY KEY (`id`),  UNIQUE INDEX `id_UNIQUE` (`id` ASC))'
+    _CREATE_COMMAND = 'CREATE TABLE IF NOT EXISTS `test`.`%s` (`id` INT UNSIGNED NOT NULL AUTO_INCREMENT, `news_id` INT UNSIGNED NOT NULL,  `create_time` DATETIME NULL,  `title` VARCHAR(255) NULL,  `summary` MEDIUMTEXT NULL,  `content` MEDIUMTEXT NULL,  `thumbnails` TEXT NULL,  `source` TEXT NULL,  `deploy_status` INT NULL DEFAULT 0,  PRIMARY KEY (`id`),  UNIQUE INDEX `id_UNIQUE` (`id` ASC))'%_NEWS_TABLE_NAME
 
     def __init__(self):
         BaseSpider.__init__(self, BaiduNewsSpider._CREATE_COMMAND)
@@ -70,31 +72,39 @@ class BaiduNewsSpider(BaseSpider):
         news.setContent(html_content)
 
     # 插入table命令
-    _INSERT_COMMAND = 'insert into news (create_time, title, summary, content, thumbnails, source) values (%s,%s,%s,%s,%s,%s)'
+    _INSERT_COMMAND = 'insert into %s (news_id, create_time, title, summary, content, thumbnails, source) values '%_NEWS_TABLE_NAME + "(%s,%s,%s,%s,%s,%s,%s)"
     def start(self):
-        currentCount = self.getTableCount("news")
+        currentCount = self.getTableCount(_NEWS_TABLE_NAME)
 
         index = 1
         urlFormat = "http://store.baidu.com/news/api/list?pn=%%d&limit=%d&_=%%s"%self.quota
 
-        updateNewsList = []
-
+        updateNewsList = [] # 保存所有需要更新的新闻数据
         while True:
             url = urlFormat%(index, str(int(time.time()*100)))
             totalCount, newsList = self.parseNewsList(self.requestUrlContent(url))
 
             for news in newsList:
                 # 检查是否已经在数据库中了
+                if self.isInTable(_NEWS_TABLE_NAME, "news_id", news.getId()):
+                    # 已经在数据库中了
+                    print "已经在数据中", news.getId(), news.getTitle(), "\n"
+                    continue
 
-                # 不数据库中
+                # 不数据库中，插入需要更新数据中
                 self.getNewsContent(news)
+                updateNewsList.append(news)
+
+                currentCount += 1
+                if currentCount >= totalCount:
+                    # 已经获取全部更新
+                    break
+
                 time.sleep(0.1)
-                if self.insert(BaiduNewsSpider._INSERT_COMMAND, news.toTuple()):
-                    currentCount += 1
-                else:
-                    print "插入失败:", news.getId(), news.getTitle()
-                print news
-                print "****************"
+
+            if currentCount >= totalCount:
+                # 已经获取全部更新
+                break
 
             if len(newsList) < self.quota:
                 break
@@ -102,20 +112,36 @@ class BaiduNewsSpider(BaseSpider):
             time.sleep(0.1)
             index += 1
 
-            if index > 60:
+            if index > 1000:
+                # 防止超时，死循环
                 break
+
+        # 对更新的数据进行排序，按照时间递增排序，然后再插入数据
+        updateNewsList.sort()
+        print "========开始插入数据库========"
+        succCount = 0
+        for news in updateNewsList:
+            if self.insert(BaiduNewsSpider._INSERT_COMMAND, news.toTuple()):
+                succCount += 1
+            else:
+                print "插入失败:", news.getId(), news.getTitle()
+            print news
+            print "****************"
 
         # 完成抓取任务
         self.finish()
+        print "更新", succCount, "条数据！"
+        print "========完成更新数据库========"
 
 def main():
     spider = BaiduNewsSpider()
     spider.start()
-    # spider.getTableCount("news")
+    # print spider.getTableCount("news")
+    # print spider.isInTable("news.bak", "id", 0)
 
 if __name__ == "__main__":
-    # if len(sys.argv) == 1:
-    #     exit(1)
+    if len(sys.argv) == 1:
+        exit(1)
 
     reload(sys)
     sys.setdefaultencoding('utf-8')
@@ -130,7 +156,7 @@ if __name__ == "__main__":
 
     print "============================================"
     print "change work direcotory to workDir", workDir
-    print "Start ArticleUtils:", time.asctime()
+    print "Start BaiduNewsSpider:", time.asctime()
 
     main()
 

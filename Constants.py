@@ -1,3 +1,3 @@
-MYSQL_PASSPORT = "debian-sys-maint"
+MYSQL_PASSPORT = "jiangerji"
 MYSQL_PASSWORD = "eMBWzH5SIFJw5I4c"
-MYSQL_DATABASE = "future-store"
+MYSQL_DATABASE = "baidu"
