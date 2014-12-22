@@ -8,6 +8,8 @@ import json
 import re
 
 import CommonUtils
+import Constants
+
 from Base.BaseSpider import BaseSpider
 from BaiduNewsClass import BaiduNewsInfo
 
@@ -17,8 +19,8 @@ class BaiduNewsSpider(BaseSpider):
     # 创建新闻表的命令
     _CREATE_COMMAND = 'CREATE TABLE IF NOT EXISTS `%s` (`id` INT UNSIGNED NOT NULL AUTO_INCREMENT, `news_id` INT UNSIGNED NOT NULL,  `create_time` DATETIME NULL,  `title` VARCHAR(255) NULL,  `summary` MEDIUMTEXT NULL,  `content` MEDIUMTEXT NULL,  `thumbnails` TEXT NULL,  `source` TEXT NULL,  `deploy_status` INT NULL DEFAULT 0,  PRIMARY KEY (`id`),  UNIQUE INDEX `id_UNIQUE` (`id` ASC))'%_NEWS_TABLE_NAME
 
-    def __init__(self):
-        BaseSpider.__init__(self, BaiduNewsSpider._CREATE_COMMAND)
+    def __init__(self, host=Constants.MYSQL_HOST, user=Constants.MYSQL_PASSPORT, passwd=Constants.MYSQL_PASSWORD, db=Constants.MYSQL_DATABASE):
+        BaseSpider.__init__(self, BaiduNewsSpider._CREATE_COMMAND, host, user, passwd, db)
 
         self.quota = 36
 
@@ -147,7 +149,7 @@ if __name__ == "__main__":
     sys.setdefaultencoding('utf-8')
 
     workDir = os.path.dirname(os.path.realpath(sys.argv[0]))
-    os.chdir(workDir)
+    os.chdir(os.path.dirname(workDir))
 
     logFile = CommonUtils.openLogFile()
 

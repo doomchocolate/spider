@@ -6,8 +6,10 @@ import os
 import time
 import datetime
 import re
+import platform
 
 import CommonUtils
+import Constants
 from Base.BaseSpider import BaseSpider
 from BaiduEvaluationClass import BaiduEvaluationInfo
 
@@ -17,27 +19,27 @@ class BaiduEvaluationSpider(BaseSpider):
     # 创建新闻表的命令
     _CREATE_COMMAND = 'CREATE TABLE IF NOT EXISTS `%s` (`id` INT UNSIGNED NOT NULL AUTO_INCREMENT, `evaluation_id` INT UNSIGNED NOT NULL, `product_id` INT UNSIGNED NOT NULL,  `create_time` DATETIME NULL,  `title` TEXT NULL,  `content` MEDIUMTEXT NULL,  `thumbnails` TEXT NULL,  `deploy_status` INT NULL DEFAULT 0,  PRIMARY KEY (`id`),  UNIQUE INDEX `id_UNIQUE` (`id` ASC))'%_EVALUATION_TABLE_NAME
 
-    def __init__(self):
-        BaseSpider.__init__(self, BaiduEvaluationSpider._CREATE_COMMAND)
+    def __init__(self, host=Constants.MYSQL_HOST, user=Constants.MYSQL_PASSPORT, passwd=Constants.MYSQL_PASSWORD, db=Constants.MYSQL_DATABASE):
+        BaseSpider.__init__(self, BaiduEvaluationSpider._CREATE_COMMAND, host, user, passwd, db)
 
         self.quota = 36
 
-    def reMatch(self, content, pattern):
-        pattern = re.compile(pattern)
+    # def reMatch(self, content, pattern):
+    #     pattern = re.compile(pattern)
 
-        result = ""
-        match = re.search(pattern, content)
-        if match:
-            result = match.group()
-            result = unicode(result, "utf-8")
+    #     result = ""
+    #     match = re.search(pattern, content)
+    #     if match:
+    #         result = match.group()
+    #         result = unicode(result, "utf-8")
 
-        return result
+    #     return result
 
-    def reFindall(self, content, pattern):
-        pattern = re.compile(pattern)
-        match = re.findall(pattern, content)
+    # def reFindall(self, content, pattern):
+    #     pattern = re.compile(pattern)
+    #     match = re.findall(pattern, content)
 
-        return match
+    #     return match
 
     # 获取title
     def getTitle(self, content):
@@ -202,7 +204,18 @@ class BaiduEvaluationSpider(BaseSpider):
         print "=========更新评测报告完成==========="
         
 def main():
-    spider = BaiduEvaluationSpider()
+    host=Constants.MYSQL_HOST
+    user=Constants.MYSQL_PASSPORT
+    passwd=Constants.MYSQL_PASSWORD
+    db=Constants.MYSQL_DATABASE
+
+    if platform.system() == 'Windows':
+        host="localhost"
+        user="root"
+        passwd="123456"
+        db="test"
+
+    spider = BaiduEvaluationSpider(host, user, passwd, db)
     spider.start()
 
     # evaluation = spider.getEvaluation(467)
@@ -217,7 +230,7 @@ if __name__ == "__main__":
     sys.setdefaultencoding('utf-8')
 
     workDir = os.path.dirname(os.path.realpath(sys.argv[0]))
-    os.chdir(workDir)
+    os.chdir(os.path.dirname(workDir))
 
     logFile = CommonUtils.openLogFile()
 

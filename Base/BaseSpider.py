@@ -6,6 +6,7 @@ import os
 import time
 import platform
 import tempfile
+import re
 
 # 第三方依赖库
 import MySQLdb
@@ -18,16 +19,13 @@ PIC_SUFFIX = ["png", "jpg", "gif", "jpeg", "bmp"] # 图片文件后缀
 
 class BaseSpider:
 
-    def __init__(self, _createTableCommand):
+    def __init__(self, _createTableCommand, host=Constants.MYSQL_HOST, user=Constants.MYSQL_PASSPORT, passwd=Constants.MYSQL_PASSWORD, db=Constants.MYSQL_DATABASE, charset="utf8"):
         # 连接数据库
         self.mysqlConn = None
         self.mysqlCur = None
         exception = None
         try:
-            if platform.system() == 'Windows':
-                self.mysqlConn=MySQLdb.connect(host="localhost",user="root", passwd="123456",db="test",charset="utf8")
-            else:
-                self.mysqlConn=MySQLdb.connect(host=Constants.MYSQL_HOST,user=Constants.MYSQL_PASSPORT,passwd=Constants.MYSQL_PASSWORD,db=Constants.MYSQL_DATABASE,charset="utf8")
+            self.mysqlConn=MySQLdb.connect(host=host, user=user, passwd=passwd, db=db, charset=charset)
             self.mysqlCur = self.mysqlConn.cursor()
         except MySQLdb.Error,e:
              print "Mysql Error %d: %s" % (e.args[0], e.args[1])
@@ -128,6 +126,25 @@ class BaseSpider:
         self.mysqlCur = None
         self.mysqlConn = None
 
+    def reMatch(self, content, pattern):
+        pattern = re.compile(pattern)
+
+        result = ""
+        match = re.search(pattern, content)
+        if match:
+            result = match.group()
+            try:
+                result = unicode(result, "utf-8")
+            except Exception, e:
+                pass
+
+        return result
+
+    def reFindall(self, content, pattern):
+        pattern = re.compile(pattern)
+        match = re.findall(pattern, content)
+
+        return match
             
 
 
