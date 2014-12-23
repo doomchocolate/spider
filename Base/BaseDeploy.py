@@ -2,13 +2,17 @@
 from __future__ import unicode_literals
 import __init__ # 主要为了在没有加入到环境变量时，可以引用父目录的文件
 import sys
+import os
+import tempfile
 
 # 第三方依赖库
 import MySQLdb
 
 import Constants
+import CommonUtils
+import BaseInterface
 
-class BaseDeploy:
+class BaseDeploy(BaseInterface.BaseInterface):
 
     def __init__(self, host=Constants.MYSQL_HOST, user=Constants.MYSQL_PASSPORT, passwd=Constants.MYSQL_PASSWORD, db=Constants.MYSQL_DATABASE, charset="utf8"):
         self.mysqlConn = None
@@ -36,3 +40,29 @@ class BaseDeploy:
             print e
 
         return result
+
+    def update(self, tableName, _id, columnName, columnValue):
+        if self.mysqlCur != None:
+            command = "update `%s` set `%s`='%s' where `id`='%s'"%(tableName, columnName, str(columnValue), str(_id))
+            # print command
+            try:
+                self.mysqlCur.execute(command)
+            except Exception, e:
+                print e
+
+    def commit(self):
+        if self.mysqlConn != None:
+            self.mysqlConn.commit()
+
+    def finish(self):
+        if self.mysqlConn != None:
+            self.mysqlConn.commit()
+
+        if self.mysqlCur != None:
+            self.mysqlCur.close()
+
+        if self.mysqlConn != None:
+            self.mysqlConn.close()
+
+        self.mysqlCur = None
+        self.mysqlConn = None
