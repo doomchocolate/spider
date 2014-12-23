@@ -20,6 +20,12 @@ PIC_SUFFIX = ["png", "jpg", "gif", "jpeg", "bmp"] # 图片文件后缀
 class BaseSpider:
 
     def __init__(self, _createTableCommand, host=Constants.MYSQL_HOST, user=Constants.MYSQL_PASSPORT, passwd=Constants.MYSQL_PASSWORD, db=Constants.MYSQL_DATABASE, charset="utf8"):
+        self._host = host
+        self._user = user
+        self._passwd = passwd
+        self._db = db
+        self._charset = charset
+
         # 连接数据库
         self.mysqlConn = None
         self.mysqlCur = None
@@ -41,6 +47,8 @@ class BaseSpider:
 
         self.totalSuccCount = 0
         self.flushCount = 0
+
+        self.valueTable = {} # 主要用于缓存isInTable的数据
 
     # 获取url的内容, 如果是图片，返回图片的地址
     def requestUrlContent(self, url, cache_dir=None, filename=None):
@@ -86,16 +94,36 @@ class BaseSpider:
 
     # 检查某个值是否已经存在
     def isInTable(self, tableName, key, value):
-        command = 'select count(id) from `%s` where `%s`="%s"'%(tableName, key, str(value))
-        inTable = False
+        _key = tableName + key
+        valueTable = str(value)
+        if self.valueTable.has_key(_key):
+            if value in self.valueTable[_key]:
+                return True
+            else:
+                return False
+
+        command = 'select `%s` from `%s`'%(key, tableName)
         try:
             self.mysqlCur.execute(command)
-            if self.mysqlCur.fetchone()[0] > 0:
-                inTable = True
+            self.valueTable[_key] = map(lambda x: x[0], self.mysqlCur.fetchall())
+            self.valueTable[_key] = map(str, self.valueTable[_key])
+            if value in self.valueTable[_key]:
+                return True
         except Exception, e:
             print e
+        
+        return False
 
-        return inTable
+        # command = 'select count(id) from `%s` where `%s`="%s"'%(tableName, key, str(value))
+        # inTable = False
+        # try:
+        #     self.mysqlCur.execute(command)
+        #     if self.mysqlCur.fetchone()[0] > 0:
+        #         inTable = True
+        # except Exception, e:
+        #     print e
+
+        # return inTable
 
 
     def insert(self, command, value):

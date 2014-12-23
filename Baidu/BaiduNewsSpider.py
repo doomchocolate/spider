@@ -6,6 +6,7 @@ import os
 import time
 import json
 import re
+import platform
 
 import CommonUtils
 import Constants
@@ -49,7 +50,7 @@ class BaiduNewsSpider(BaseSpider):
     def getNewsContent(self, news):
         newsId = news.getId()
         url = "http://store.baidu.com/news/%s.html"%newsId
-        content = self.requestUrlContent(url, "cache"+os.path.sep+"html", "%s.html"%newsId)
+        content = self.requestUrlContent(url, "cache"+os.path.sep+"news"+os.path.sep+"html", "%s.html"%newsId)
 
         # 获取summary
         summary_pattern = r'<div class=\"d-summary\">[\s\S]*?</div>'
@@ -82,9 +83,14 @@ class BaiduNewsSpider(BaseSpider):
         urlFormat = "http://store.baidu.com/news/api/list?pn=%%d&limit=%d&_=%%s"%self.quota
 
         updateNewsList = [] # 保存所有需要更新的新闻数据
+        startTime = time.time()
         while True:
             url = urlFormat%(index, str(int(time.time()*100)))
             totalCount, newsList = self.parseNewsList(self.requestUrlContent(url))
+
+            if currentCount >= totalCount:
+                # 已经获取全部更新
+                break
 
             for news in newsList:
                 # 检查是否已经在数据库中了
@@ -102,7 +108,7 @@ class BaiduNewsSpider(BaseSpider):
                     # 已经获取全部更新
                     break
 
-                time.sleep(0.1)
+                # time.sleep(0.1)
 
             if currentCount >= totalCount:
                 # 已经获取全部更新
@@ -111,12 +117,17 @@ class BaiduNewsSpider(BaseSpider):
             if len(newsList) < self.quota:
                 break
 
-            time.sleep(0.1)
+            # time.sleep(0.1)
             index += 1
 
             if index > 1000:
                 # 防止超时，死循环
                 break
+
+            # break # Debug使用，只解析一桢数据
+        print "获取新闻更新数据结束，耗时:", (time.time() - startTime), "秒"
+        # return
+        startTime = time.time()
 
         # 对更新的数据进行排序，按照时间递增排序，然后再插入数据
         updateNewsList.sort()
@@ -133,13 +144,24 @@ class BaiduNewsSpider(BaseSpider):
         # 完成抓取任务
         self.finish()
         print "更新", succCount, "条数据！"
-        print "========完成更新数据库========"
+        print "========完成更新数据库========，耗时", (time.time() - startTime), '秒'
 
 def main():
-    spider = BaiduNewsSpider()
+    host=Constants.MYSQL_HOST
+    user=Constants.MYSQL_PASSPORT
+    passwd=Constants.MYSQL_PASSWORD
+    db=Constants.MYSQL_DATABASE
+
+    if platform.system() == 'Windows':
+        host="localhost"
+        user="root"
+        passwd="123456"
+        db="test"
+
+    spider = BaiduNewsSpider(host, user, passwd, db)
     spider.start()
     # print spider.getTableCount("news")
-    # print spider.isInTable("news.bak", "id", 0)
+    # print spider.isInTable("news", "id", "1")
 
 if __name__ == "__main__":
     # if len(sys.argv) == 1:
