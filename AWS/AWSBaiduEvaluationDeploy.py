@@ -51,6 +51,7 @@ class AWSBaiduEvaluationDeploy(BaseDeploy):
             _id = evaluation[0]
             newsId = evaluation[1]
             productId = evaluation[2]
+            createTime = evaluation[3]
             title = evaluation[4]
             try:
                 title = title[title.index("-")+1:]
@@ -75,7 +76,7 @@ class AWSBaiduEvaluationDeploy(BaseDeploy):
             except Exception, e:
                 pass
 
-            article = AWSArticle(tableName, newsId, title, intro, detail, thumbnail, self._articleCur, catId=15, buyUrl=buyUrl)
+            article = AWSArticle(tableName, newsId, title, intro, detail, thumbnail, self._articleCur, catId=15, buyUrl=buyUrl, createTime=createTime)
             article.addFlag(AWSArticle.ARTICLE_DISABLE_TAGS)
             if article.deploy():
                 print "发布成功:"
@@ -87,8 +88,8 @@ class AWSBaiduEvaluationDeploy(BaseDeploy):
                 print "发布失败", newsId, title
                 failedList.append(news)
 
-            if succCount > 0:
-                break
+            # if succCount > 0:
+            #     break
 
         if self._articleConn != None:
             self._articleConn.commit()

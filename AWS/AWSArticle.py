@@ -15,7 +15,7 @@ import Tags
 
 class AWSArticle(BaseInterface):
 
-    def __init__(self, infoType, newsId, title, intro, detail, thumbnail, mysqlCursor=None, catId=8, buyUrl=None):
+    def __init__(self, infoType, newsId, title, intro, detail, thumbnail, mysqlCursor=None, catId=8, buyUrl=None, createTime=None):
         """
         infoType: 新闻的类型，产品、测评或者普通新闻["news", "evaluation", "product"]
         newsId: 新闻的id
@@ -34,6 +34,7 @@ class AWSArticle(BaseInterface):
         self._buyUrl = buyUrl
         self._tags = None
         self._config = 0
+        self._createTime = createTime
 
         # 网站的根目录
         WWW_ROOT = "/home/ubuntu/drupal/dreame-mall"
@@ -170,12 +171,18 @@ class AWSArticle(BaseInterface):
         state = 1
         catid = self._catId
         created = time.strftime("%Y-%m-%d %H:%M:%S")
+        if self._createTime is not None:
+            created = self._createTime
         created_by = createOwner
         created_by_alias = ""
         modified = time.strftime("%Y-%m-%d %H:%M:%S")
+        if self._createTime is not None:
+            modified = self._createTime
         modified_by = createOwner
         checked_out = createOwner
         checked_out_time = time.strftime("%Y-%m-%d %H:%M:%S")
+        if self._createTime is not None:
+            checked_out_time = self._createTime
         publish_up = "0000-00-00 00:00:00"
         publish_down = "0000-00-00 00:00:00"
         images = ""
