@@ -62,7 +62,7 @@ class AWSBaiduProductDeploy(BaseDeploy):
                 except Exception, e:
                     raise e
 
-            article = AWSArticle(tableName, newsId, title, intro, detail, thumbnail, self._articleCur, buyUrl=buyUrl)
+            article = AWSArticle(tableName, newsId, title, intro, detail, thumbnail, self._articleCur, catId=14, buyUrl=buyUrl)
             if article.deploy():
                 print "发布成功:"
                 print article

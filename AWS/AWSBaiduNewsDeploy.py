@@ -90,7 +90,7 @@ def main():
     passwd=AWSConstants.MYSQL_PASSWORD
     db=AWSConstants.MYSQL_DATABASE
 
-    if platform.system() == 'Windows' and False:
+    if platform.system() == 'Windows':
         host="localhost"
         user="root"
         passwd="123456"
