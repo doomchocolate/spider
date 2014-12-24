@@ -52,6 +52,10 @@ class AWSBaiduEvaluationDeploy(BaseDeploy):
             newsId = evaluation[1]
             productId = evaluation[2]
             title = evaluation[4]
+            try:
+                title = title[title.index("-")+1:]
+            except Exception, e:
+                pass
             intro = "" # 从products表中获取
             try:
                 intro = self.getValue("products", "product_intro", "product_id", productId, 1)[0]
@@ -72,6 +76,7 @@ class AWSBaiduEvaluationDeploy(BaseDeploy):
                 pass
 
             article = AWSArticle(tableName, newsId, title, intro, detail, thumbnail, self._articleCur, catId=15, buyUrl=buyUrl)
+            article.addFlag(AWSArticle.ARTICLE_DISABLE_TAGS)
             if article.deploy():
                 print "发布成功:"
                 print article

@@ -33,6 +33,7 @@ class AWSArticle(BaseInterface):
         self._mysqlCursor = mysqlCursor
         self._buyUrl = buyUrl
         self._tags = None
+        self._config = 0
 
         # 网站的根目录
         WWW_ROOT = "/home/ubuntu/drupal/dreame-mall"
@@ -249,6 +250,10 @@ class AWSArticle(BaseInterface):
         except Exception, e:
             print "插入Tags异常", e
 
+    ARTICLE_DISABLE_TAGS = 0x00000001 # 对该文章不进行标签分类
+    def addFlag(self, flag):
+        self._config |= flag
+
     def deploy(self):
         """
         发布到网站中
@@ -259,7 +264,7 @@ class AWSArticle(BaseInterface):
 
         # 下载thumbnail
         thumbnail = None
-        if self._thumbnail is not None or len(self._thumbnail) == 0:
+        if self._thumbnail is not None and len(self._thumbnail) > 0:
             thumbnail = self.downloadThumbnail()
             print "thumbnail:", thumbnail
             if thumbnail is None:
@@ -285,7 +290,8 @@ class AWSArticle(BaseInterface):
                 return False
 
         # 插入tags
-        self.insertTags(contentId)
+        if (self._config & ARTICLE_DISABLE_TAGS) != ARTICLE_DISABLE_TAGS:
+            self.insertTags(contentId)
         return True
 
 def main():
