@@ -100,7 +100,7 @@ class BaiduEvaluationSpider(BaseSpider):
 
     def getEvaluation(self, evaluationId):
         url = 'http://store.baidu.com/evaluation/view/%s.html'%str(evaluationId)
-        cachePath = "cache" + os.path.sep + "evaluation" + os.path.sep + "html"
+        cachePath = "cache" + os.path.sep + _EVALUATION_TABLE_NAME + os.path.sep + "html"
         htmlContent = self.requestUrlContent(url, cachePath, "%s.html"%evaluationId)
 
         if htmlContent == None:

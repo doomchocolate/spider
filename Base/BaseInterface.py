@@ -62,3 +62,19 @@ class BaseInterface:
         if alias[0] == '-':
             alias = alias[1:]
         return alias
+
+    def getValue(self, mysqlCursor, tableName, columnName, keyColumn, keyColumnValue, limit=-1):
+        command = 'select %s from %s where `%s`="%s"'%(columnName, tableName, keyColumn, keyColumnValue)
+        if limit > 0:
+            command += " limit 0, %d"%limit
+
+        result = []
+        
+        try:
+            mysqlCursor.execute(command)
+            result = mysqlCursor.fetchall()
+        except Exception, e:
+            pass
+
+        return map(lambda x: x[0], result)
+        

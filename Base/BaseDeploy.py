@@ -41,6 +41,9 @@ class BaseDeploy(BaseInterface.BaseInterface):
 
         return result
 
+    def getValue(self, tableName, columnName, keyColumn, keyColumnValue, limit=-1):
+        return BaseInterface.BaseInterface.getValue(self, self.mysqlCur, tableName, columnName, keyColumn, keyColumnValue, limit=-1)
+
     def update(self, tableName, _id, columnName, columnValue):
         if self.mysqlCur != None:
             command = "update `%s` set `%s`='%s' where `id`='%s'"%(tableName, columnName, str(columnValue), str(_id))

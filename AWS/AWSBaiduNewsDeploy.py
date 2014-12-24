@@ -65,8 +65,8 @@ class AWSBaiduNewsDeploy(BaseDeploy):
                 print "发布失败", newsId, title
                 failedList.append(news)
 
-            # if succCount > 2:
-            #     break
+            if succCount > 2:
+                break
 
         if self._articleConn != None:
             self._articleConn.commit()

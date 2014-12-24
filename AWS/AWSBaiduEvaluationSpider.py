@@ -9,7 +9,7 @@ import time
 import AWSConstants
 import CommonUtils
 
-from Baidu.BaiduProductSpider import BaiduProductSpider
+from Baidu.BaiduEvaluationSpider import BaiduEvaluationSpider
 
 def main():
     host=AWSConstants.MYSQL_HOST
@@ -23,7 +23,7 @@ def main():
         passwd="123456"
         db="test"
 
-    spider = BaiduProductSpider(host, user, passwd, db)
+    spider = BaiduEvaluationSpider(host, user, passwd, db)
     spider.start()
 
 if __name__=="__main__":
@@ -40,7 +40,7 @@ if __name__=="__main__":
 
     print "============================================"
     print "change work direcotory to workDir", workDir
-    print "Start AWS Baidu Product Spider:", time.asctime()
+    print "Start AWS Baidu Evaluation Spider:", time.asctime()
 
     main()
 

@@ -62,6 +62,7 @@ class AWSArticle(BaseInterface):
         result.append("  detail: %.40s..."%str(self._detail))
         result.append("  thumbnail: %s"%str(self._thumbnail))
         result.append("  cat id: %s"%str(self._catId))
+        result.append("  product url: %s"%str(self._buyUrl))
         result.append("  tags are:")
         if self._tags is not None:
             result.append("    %s"%", ".join(map(lambda x: x[1], self._tags))) 
@@ -257,11 +258,13 @@ class AWSArticle(BaseInterface):
             return False
 
         # 下载thumbnail
-        thumbnail = self.downloadThumbnail()
-        print "thumbnail:", thumbnail
-        if thumbnail is None:
-            print "下载thumbnail失败"
-            return False
+        thumbnail = None
+        if self._thumbnail is not None or len(self._thumbnail) == 0:
+            thumbnail = self.downloadThumbnail()
+            print "thumbnail:", thumbnail
+            if thumbnail is None:
+                print "下载thumbnail失败"
+                return False
 
         # 插入assets表
         assetId = self.insertIntoAssets()
@@ -276,9 +279,10 @@ class AWSArticle(BaseInterface):
             return False
 
         # 插入应用图片
-        state = self.insertXrefContent(contentId, thumbnail)
-        if state <= 0:
-            return False
+        if thumbnail is not None:
+            state = self.insertXrefContent(contentId, thumbnail)
+            if state <= 0:
+                return False
 
         # 插入tags
         self.insertTags(contentId)
