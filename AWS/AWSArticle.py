@@ -6,6 +6,7 @@ import os
 import time
 import platform
 import random
+import shutil
 
 import Image
 
@@ -91,39 +92,54 @@ class AWSArticle(BaseInterface):
         thumbnailCachePath = self._thumbnailCachePath
 
         # XS
-        _width = 100
-        _heigh = _width * height / width
         target_file = os.path.join(thumbnailCachePath, filename+"_portfolio_"+"XS"+ext)
-        out = im.resize((_width, _heigh), Image.ANTIALIAS)
-        out.save(target_file)
+        try:
+            _width = 100
+            _heigh = _width * height / width
+            out = im.resize((_width, _heigh), Image.ANTIALIAS)
+            out.save(target_file)
+        except Exception, e:
+            shutil.copyfile(thumbnailPath, target_file)
 
         # S
-        _width = 200
-        _heigh = _width * height / width
         target_file = os.path.join(thumbnailCachePath, filename+"_portfolio_"+"S"+ext)
-        out = im.resize((_width, _heigh), Image.ANTIALIAS)
-        out.save(target_file)
+        try:
+            _width = 200
+            _heigh = _width * height / width
+            out = im.resize((_width, _heigh), Image.ANTIALIAS)
+            out.save(target_file)
+        except Exception, e:
+            shutil.copyfile(thumbnailPath, target_file)
 
         # M
-        _width = 400
-        _heigh = _width * height / width
         target_file = os.path.join(thumbnailCachePath, filename+"_portfolio_"+"M"+ext)
-        out = im.resize((_width, _heigh), Image.ANTIALIAS)
-        out.save(target_file)
+        try:
+            _width = 400
+            _heigh = _width * height / width
+            out = im.resize((_width, _heigh), Image.ANTIALIAS)
+            out.save(target_file)
+        except Exception, e:
+            shutil.copyfile(thumbnailPath, target_file)
 
         # L
-        _width = 600
-        _heigh = _width * height / width
         target_file = os.path.join(thumbnailCachePath, filename+"_portfolio_"+"L"+ext)
-        out = im.resize((_width, _heigh), Image.ANTIALIAS)
-        out.save(target_file)
+        try:
+            _width = 600
+            _heigh = _width * height / width
+            out = im.resize((_width, _heigh), Image.ANTIALIAS)
+            out.save(target_file)
+        except Exception, e:
+            shutil.copyfile(thumbnailPath, target_file)
 
         # XL
-        _width = 900
-        _heigh = _width * height / width
         target_file = os.path.join(thumbnailCachePath, filename+"_portfolio_"+"XL"+ext)
-        out = im.resize((_width, _heigh), Image.ANTIALIAS)
-        out.save(target_file)
+        try:
+            _width = 900
+            _heigh = _width * height / width
+            out = im.resize((_width, _heigh), Image.ANTIALIAS)
+            out.save(target_file)
+        except Exception, e:
+            shutil.copyfile(thumbnailPath, target_file)
 
         return os.path.join(self._TARGET_CACHE_DIR, filename+"_portfolio"+ext)
 
@@ -143,7 +159,7 @@ class AWSArticle(BaseInterface):
 
         INSERT_ASSETS = 'insert into erji_assets (parent_id, lft, rgt, level, name, title, rules) values (%s,%s,%s,%s,%s,%s,%s)'
         assets_name = "com_content.article.%d"%(name_id)
-        assets_values = [36, _lft, _rgt, 3, assets_name, title, AWSArticle.ASSETS_RULES]
+        assets_values = [36, _lft, _rgt, 3, assets_name, title[0: min(100, len(title))], AWSArticle.ASSETS_RULES]
         a = cursor.execute(INSERT_ASSETS, assets_values)
         
         return cursor.lastrowid
@@ -164,7 +180,7 @@ class AWSArticle(BaseInterface):
         cursor = self._mysqlCursor
 
         asset_id = _asset_id
-        title = self._title
+        title = self._title[0: min(255, len(self._title))]
         alias = self.aliasVerify(title)
         introtext = self._intro
         fulltext = self._detail
