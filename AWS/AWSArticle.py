@@ -11,10 +11,11 @@ import Image
 
 from Base.BaseInterface import BaseInterface
 import CommonUtils
+import Tags
 
 class AWSArticle(BaseInterface):
 
-    def __init__(self, infoType, newsId, title, intro, detail, thumbnail, mysqlCursor=None, catId=8):
+    def __init__(self, infoType, newsId, title, intro, detail, thumbnail, mysqlCursor=None, catId=8, buyUrl=None):
         """
         infoType: 新闻的类型，产品、测评或者普通新闻["news", "evaluation", "product"]
         newsId: 新闻的id
@@ -30,6 +31,8 @@ class AWSArticle(BaseInterface):
         self._thumbnail = thumbnail
         self._catId = catId
         self._mysqlCursor = mysqlCursor
+        self._buyUrl = buyUrl
+        self._tags = None
 
         # 网站的根目录
         WWW_ROOT = "/home/ubuntu/drupal/dreame-mall"
@@ -59,6 +62,9 @@ class AWSArticle(BaseInterface):
         result.append("  detail: %.40s..."%str(self._detail))
         result.append("  thumbnail: %s"%str(self._thumbnail))
         result.append("  cat id: %s"%str(self._catId))
+        result.append("  tags are:")
+        if self._tags is not None:
+            result.append("    %s"%", ".join(map(lambda x: x[1], self._tags))) 
 
         return "\n".join(result)
 
@@ -139,8 +145,6 @@ class AWSArticle(BaseInterface):
         
         return cursor.lastrowid
 
-    
-
     #/**********************************************************/
     CONTENT_ATTRIBS = '{"show_title":"","link_titles":"","show_intro":"","show_category":"","link_category":"","show_parent_category":"","link_parent_category":"","show_author":"","link_author":"","show_create_date":"","show_modify_date":"","show_publish_date":"","show_item_navigation":"","show_icons":"","show_print_icon":"","show_email_icon":"","show_vote":"","show_hits":"","show_noauth":"","urls_position":"","alternative_readmore":"","article_layout":"","show_related_article":"","show_related_heading":"","related_heading":"","show_related_type":"","show_related_featured":"","related_image_size":"","related_orderby":"","show_publishing_options":"","show_article_options":"","show_urls_images_backend":"","show_urls_images_frontend":"","tz_portfolio_redirect":"","show_attachments":"","show_image":"","tz_use_image_hover":"","tz_image_timeout":"","portfolio_image_size":"","portfolio_image_featured_size":"","detail_article_image_size":"","show_image_gallery":"","detail_article_image_gallery_size":"","image_gallery_slideshow":"","show_arrows_image_gallery":"","show_controlNav_image_gallery":"","image_gallery_pausePlay":"","image_gallery_pauseOnAction":"","image_gallery_pauseOnHover":"","image_gallery_useCSS":"","image_gallery_slide_direction":"","image_gallery_animation":"","image_gallery_animSpeed":"","image_gallery_animation_duration":"","show_video":"","video_width":"","video_height":"","tz_show_gmap":"","tz_gmap_width":"","tz_gmap_height":"","tz_gmap_mousewheel_zoom":"","tz_gmap_zoomlevel":"","tz_gmap_latitude":"","tz_gmap_longitude":"","tz_gmap_address":"","tz_gmap_custom_tooltip":"","useCloudZoom":"","article_image_zoom_size":"","zoomWidth":"","zoomHeight":"","position":"","adjustX":"","adjustY":"","tint":"","tintOpacity":"","lensOpacity":"","softFocus":"","smoothMove":"","showTitle":"","titleOpacity":"","show_comment":"","tz_comment_type":"","tz_show_count_comment":"","disqusSubDomain":"","disqusApiSecretKey":"","disqusDevMode":"","show_twitter_button":"","show_facebook_button":"","show_google_button":"","show_extra_fields":"","field_show_type":""}'
 
@@ -186,6 +190,12 @@ class AWSArticle(BaseInterface):
         language = "*"
         xreference = ""
 
+        if self._buyUrl is not None and len(self._buyUrl) > 0:
+            # 更新fulltext
+            buyBtnCode = '<p class="jiangerji"><a class="btn btn-large btn-primary" href="%s" target="_blank">立即购买</a></p>\n'%self._buyUrl
+            fulltext = buyBtnCode + fulltext
+            # fulltext = fulltext.replace("'", "\\'")
+
         values = (asset_id, title, alias, introtext, fulltext, state, catid, created, created_by, created_by_alias, modified, modified_by, checked_out, checked_out_time, publish_up, publish_down, images, urls, attribs, version, ordering, metakey, metadesc, access, hits, metadata, featured, language, xreference)
 
         count = cursor.execute(AWSArticle.CONTENT_INSERT_COMMAND, values)
@@ -223,6 +233,20 @@ class AWSArticle(BaseInterface):
 
         values = (contentid, groupid, images, images_hover, gallery, video, content_type, imagetitle, gallerytitle, videotitle, videothumb, attachfiles, attachtitle, attachold, audio, audiothumb, audiotitle, quote_author, quote_text, link_url, link_title, link_attribs)
         return self._mysqlCursor.execute(AWSArticle.XREF_INSERT_COMMAND, values)
+    
+    TAGS_INSERT_COMMAND = 'insert into erji_tz_portfolio_tags_xref (tagsid, contentid) values (%s,%s)'
+    def insertTags(self, contentId):
+        content = self._title + self._intro + self._detail
+        self._tags = Tags.getTags(content)
+
+        values = []
+        for tag in self._tags:
+            values.append((tag[0], contentId))
+
+        try:
+            self._mysqlCursor.executemany(AWSArticle.TAGS_INSERT_COMMAND, values)
+        except Exception, e:
+            print "插入Tags异常", e
 
     def deploy(self):
         """
@@ -253,10 +277,12 @@ class AWSArticle(BaseInterface):
 
         # 插入应用图片
         state = self.insertXrefContent(contentId, thumbnail)
-        if state > 0:
-            return True
-        else:
+        if state <= 0:
             return False
+
+        # 插入tags
+        self.insertTags(contentId)
+        return True
 
 def main():
     article = AWSArticle("test", 1, "title", "intro", "detail", 'http://bs.baidu.com/dulife/7e3348cc419c3aef06746ad87b77b625.jpg')

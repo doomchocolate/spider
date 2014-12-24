@@ -24,7 +24,7 @@ class BaiduProductSpider(BaseSpider):
     def __init__(self, host=Constants.MYSQL_HOST, user=Constants.MYSQL_PASSPORT, passwd=Constants.MYSQL_PASSWORD, db=Constants.MYSQL_DATABASE):
         BaseSpider.__init__(self, BaiduProductSpider._CREATE_COMMAND, host, user, passwd, db)
 
-        self.htmlCacheDir = "cache" + os.path.sep + "product" + os.path.sep + 'html'
+        self.htmlCacheDir = "cache" + os.path.sep + _PRODUCT_TABLE_NAME + os.path.sep + 'html'
 
     def parserProductsList(self, content):
         result = []
