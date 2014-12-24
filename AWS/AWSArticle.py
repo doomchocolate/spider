@@ -290,7 +290,7 @@ class AWSArticle(BaseInterface):
                 return False
 
         # 插入tags
-        if (self._config & ARTICLE_DISABLE_TAGS) != ARTICLE_DISABLE_TAGS:
+        if (self._config & AWSArticle.ARTICLE_DISABLE_TAGS) != AWSArticle.ARTICLE_DISABLE_TAGS:
             self.insertTags(contentId)
         return True
 
