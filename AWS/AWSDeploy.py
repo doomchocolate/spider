@@ -25,6 +25,8 @@ def main():
             print "  更新抓取", command, "异常", e
         print "\n"
 
+        time.sleep(5)
+
         deployCommand = 'python AWS/AWSBaidu%sDeploy.py'%command
         try:
             print "开始部署更新", command, datetime.datetime.now()
@@ -33,6 +35,7 @@ def main():
         except Exception, e:
             print "  部署更新", command, "异常", e
         print "\n"
+        time.sleep(1)
 
 if __name__=="__main__":
     reload(sys)
