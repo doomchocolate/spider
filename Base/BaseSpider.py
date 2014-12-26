@@ -69,7 +69,7 @@ class BaseSpider:
         if target_path == None:
             target_path = tempfile.mktemp()
 
-        command = 'wget "%s" -O %s '%(url, target_path)
+        command = 'wget "%s" -O %s --timeout=60 --tries=2'%(url, target_path)
         print "Request Url:", command
         if not os.path.isfile(target_path):
             state = os.system(command.encode("utf-8")) # 在windows下是gb2312, 在ubuntu主机上应该是utf-8
@@ -80,7 +80,6 @@ class BaseSpider:
             return target_path
 
         return open(target_path).read()
-
 
     def getTableCount(self, tableName):
         value = 0
