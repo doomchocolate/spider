@@ -94,6 +94,9 @@ class BaiduProductInfo:
     def setDetail(self, detail):
         self.product_detail = detail
 
+    def setIntro(self, intro):
+        self.product_intro = intro
+
     def setProductThumbnails(self, product_thumbnails):
         self.product_thumbnails = product_thumbnails
 

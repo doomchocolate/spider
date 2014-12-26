@@ -48,6 +48,9 @@ class BaiduNewsInfo:
     def setContent(self, content):
         self.content = content
 
+    def setIntro(self, intro):
+        self.excerpt = intro
+
     def getId(self):
         return self.id
 

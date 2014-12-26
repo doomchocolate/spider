@@ -62,6 +62,7 @@ class BaiduNewsSpider(BaseSpider):
             summary = match.group()
             summary = unicode(summary, "utf-8")
             summary = summary[summary.index(">")+1:summary.rindex("</div>")]
+            news.setIntro(summary)
 
         # 获取content
         content_pattern = r'<div class="d-artical-content" id="sourceContent">[\s\S]*?</div>'

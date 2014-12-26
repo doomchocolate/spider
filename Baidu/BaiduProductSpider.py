@@ -53,6 +53,15 @@ class BaiduProductSpider(BaseSpider):
         content = self.requestUrlContent(url, self.htmlCacheDir, "%s.html"%str(product.getId()))
 
         # 获取product detail
+        pattern = r'<div class=\"product-intro\">[\s\S]*?</div>'
+        intro = self.reMatch(content, pattern)
+        try:
+            intro = intro[intro.index(">")+1:intro.rindex("</div>")]
+            product.setIntro(intro)
+        except Exception, e:
+            print "获取Product Intro异常:", e
+
+        # 获取product detail
         pattern = r'<div class=\"product-detail\">[\s\S]*?</div>'
         detail = self.reMatch(content, pattern)
         # try:
