@@ -45,7 +45,10 @@ class BaiduEvaluationSpider(BaseSpider):
     def getTitle(self, content):
         titlePattern = r'<title>[\s\S]*?</title>'
         title = self.reMatch(content, titlePattern)
-        title = title[title.index(">")+1:title.rindex("</")]
+        try:
+            title = title[title.index(">")+1:title.rindex("</")]
+        except Exception, e:
+            pass
 
         return title
 
