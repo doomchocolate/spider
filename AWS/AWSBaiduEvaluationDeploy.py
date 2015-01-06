@@ -20,10 +20,14 @@ class AWSBaiduEvaluationDeploy(BaseDeploy):
         self._connectArticleMysql()
 
     def _connectArticleMysql(self):
-        host="localhost"
-        user="debian-sys-maint"
-        passwd="eMBWzH5SIFJw5I4c"
-        db="future-store"
+        # host="localhost"
+        # user="debian-sys-maint"
+        # passwd="eMBWzH5SIFJw5I4c"
+        # db="future-store"
+        host=AWSConstants.MYSQL_HOST
+        user=AWSConstants.MYSQL_PASSPORT
+        passwd=AWSConstants.MYSQL_PASSWORD
+        db=AWSConstants.MYSQL_DATABASE
 
         if platform.system() == 'Windows':
             host="localhost"
