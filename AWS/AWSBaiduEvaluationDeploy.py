@@ -90,7 +90,7 @@ class AWSBaiduEvaluationDeploy(BaseDeploy):
                 succCount += 1
             else:
                 print "发布失败", newsId, title
-                failedList.append(news)
+                failedList.append(article)
 
             # if succCount > 0:
             #     break
