@@ -113,13 +113,18 @@ class BaiduProductSpider(BaseSpider):
 
         updateProductsList = [] # 保存所有需要更新的产品数据
 
+        tempCount = 0
+
         while True:
+            tempCount = 0
+
             url = urlFormat%index
             totalCount, productList = self.parserProductsList(self.requestUrlContent(url))
 
             if currentCount >= totalCount:
                 # 已经获取全部更新
-                break
+                # break
+                pass
 
             # print totalCount
             for product in productList:
@@ -134,15 +139,18 @@ class BaiduProductSpider(BaseSpider):
                 updateProductsList.append(product)
 
                 currentCount += 1
+                tempCount += 1
                 if currentCount >= totalCount:
                     # 已经获取全部更新
-                    break
+                    # break
+                    pass
 
                 time.sleep(0.1)
 
             if currentCount >= totalCount:
                 # 已经获取全部更新
-                break
+                # break
+                pass
 
             if len(productList) < _QUOTA:
                 break
@@ -152,6 +160,9 @@ class BaiduProductSpider(BaseSpider):
 
             if index > 1000:
                 # 防止超时，死循环
+                break
+
+            if tempCount == 0:
                 break
 
             # break # DEBUG
