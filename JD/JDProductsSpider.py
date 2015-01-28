@@ -169,7 +169,7 @@ class JDProductSpider(BaseSpider):
         if len(details) > 0:
             detail_item = details[0]
             imgs = detail_item.xpath(".//img[@data-lazyload]")
-            print "len(imgs)", len(imgs)
+            # print "len(imgs)", len(imgs)
             for img in imgs:
                 img_url = img.get("data-lazyload")
                 img.set("data-lazyload", "done")
@@ -217,8 +217,8 @@ class JDProductSpider(BaseSpider):
 
                 if succCount%15 == 0:
                     self.commit()
-                    break
-                
+                    # break
+            break
             # 目前暂时一次获取最多60个，所以低于60，就表示抓取完毕
             if len(products) < 60:
                 break
@@ -239,11 +239,11 @@ def main():
     passwd=JDConstants.MYSQL_PASSWORD
     db=JDConstants.MYSQL_DATABASE
 
-    if platform.system() == 'Windows':
-        host="localhost"
-        user="root"
-        passwd="123456"
-        db="spider"
+    # if platform.system() == 'Windows':
+    #     host="localhost"
+    #     user="root"
+    #     passwd="123456"
+    #     db="spider"
 
     spider = JDProductSpider(host, user, passwd, db)
     spider.start()
