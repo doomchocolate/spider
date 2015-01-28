@@ -1,4 +1,6 @@
+import platform
 DEBUG = False
+
 if platform.system() == 'Windows':
     DEBUG = True
 
