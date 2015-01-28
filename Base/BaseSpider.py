@@ -51,7 +51,8 @@ class BaseSpider:
         self.valueTable = {} # 主要用于缓存isInTable的数据
 
     # 获取url的内容, 如果是图片，返回图片的地址
-    def requestUrlContent(self, url, cache_dir=None, filename=None):
+    # 如果js_enable为True, 则使用phantomjs进行获取网页地址
+    def requestUrlContent(self, url, cache_dir=None, filename=None, js_enable=False):
         if cache_dir != None and not os.path.isdir(cache_dir):
             os.makedirs(cache_dir)
 
@@ -69,17 +70,32 @@ class BaseSpider:
         if target_path == None:
             target_path = tempfile.mktemp()
 
-        command = 'wget "%s" -O %s --timeout=60 --tries=2'%(url, target_path)
-        print "Request Url:", command
+        wget = 'wget --user-agent="Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)"'
+        command = wget + ' "%s" -O %s --timeout=60 --tries=2'%(url, target_path)
+
+        if js_enable:
+            load_web_page_js_dir = os.path.join(".", "bin")
+            load_web_page_js = os.path.join(load_web_page_js_dir, "load.js")
+            # load_web_page_js = load_web_page_js.replace("\\", "/")
+            command = 'phantomjs --load-images=false "%s" "%s" "%s"'%(load_web_page_js, url, target_path)
+
+        # print "current dir", os.path.realpath(os.curdir)
+        # print "Request Url:", command.encode("utf-8")
         if not os.path.isfile(target_path):
             state = os.system(command.encode("utf-8")) # 在windows下是gb2312, 在ubuntu主机上应该是utf-8
+            print state
         else:
             print url, "is already downloaded!"
 
         if ext[1:].lower() in PIC_SUFFIX:
             return target_path
 
-        return open(target_path).read()
+        # 需要保证返回的字符串是ascii编码，否则lxml xpath解析可能会出问题
+        # phantomjs保存的文件是utf-8编码，所以需要进行转码为ascii编码
+        if js_enable:
+            return open(target_path).read().decode("utf8").encode("gb18030")
+        else:
+            return open(target_path).read()
 
     def getTableCount(self, tableName):
         value = 0
@@ -140,6 +156,10 @@ class BaseSpider:
 
         return result
 
+    def commit(self):
+        if self.mysqlConn != None:
+            self.mysqlConn.commit()
+
     def finish(self):
         if self.mysqlConn != None:
             self.mysqlConn.commit()
@@ -172,8 +192,14 @@ class BaseSpider:
         match = re.findall(pattern, content)
 
         return match
-            
 
+    def clearTable(self, table_name):
+        if self.mysqlConn is not None:
+            try:
+                self.mysqlCur.execute("TRUNCATE `%s`;"%table_name)
+                self.mysqlConn.commit()
+            except Exception, e:
+                print "clear table exception:", e
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
