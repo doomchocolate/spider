@@ -52,7 +52,7 @@ class BaseSpider:
 
     # 获取url的内容, 如果是图片，返回图片的地址
     # 如果js_enable为True, 则使用phantomjs进行获取网页地址
-    def requestUrlContent(self, url, cache_dir=None, filename=None, js_enable=False):
+    def requestUrlContent(self, url, cache_dir=None, filename=None, js_enable=False, force_update=False):
         if cache_dir != None and not os.path.isdir(cache_dir):
             os.makedirs(cache_dir)
 
@@ -81,7 +81,7 @@ class BaseSpider:
 
         # print "current dir", os.path.realpath(os.curdir)
         # print "Request Url:", command.encode("utf-8")
-        if not os.path.isfile(target_path):
+        if (not os.path.isfile(target_path)) or force_update:
             state = os.system(command.encode("utf-8")) # 在windows下是gb2312, 在ubuntu主机上应该是utf-8
             print state
         else:
