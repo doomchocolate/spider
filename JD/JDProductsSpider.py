@@ -218,7 +218,7 @@ class JDProductSpider(BaseSpider):
                 if succCount%15 == 0:
                     self.commit()
                     # break
-            break
+            # break
             # 目前暂时一次获取最多60个，所以低于60，就表示抓取完毕
             if len(products) < 60:
                 break
