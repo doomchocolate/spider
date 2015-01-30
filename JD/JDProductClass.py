@@ -70,7 +70,7 @@ class JDProductInfo:
         result.append("  product id: %s"%str(self.product_id))
         result.append("  product title: %s"%str(self.product_title))
         result.append("  product intro: %s"%str(self.product_intro))
-        result.append("  product detail: %.30s..."%str(self.product_detail))
+        # result.append("  product detail: %.30s..."%str(self.product_detail))
         result.append("  product cover img: %s"%str(self.product_cover_img))
         result.append("  product price: %s"%str(self.product_price))
         result.append("  product price tag: %s"%str(self.product_price_tag))

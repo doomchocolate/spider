@@ -38,6 +38,7 @@ class JDProductSpider(BaseSpider):
                   `product_name` TEXT NULL,\
                   `product_brand` TEXT NULL,\
                   `product_publish_time` DATETIME NULL,\
+                  `state` INT NULL DEFAULT 1,\
                    PRIMARY KEY (`id`));'%_PRODUCT_TABLE_NAME
 
     def __init__(self, host=Constants.MYSQL_HOST, user=Constants.MYSQL_PASSPORT, passwd=Constants.MYSQL_PASSWORD, db=Constants.MYSQL_DATABASE):
@@ -89,15 +90,6 @@ class JDProductSpider(BaseSpider):
             products.append(product)
 
         self.getProductPrices(products)
-
-        for p in products:
-            # try:
-            self.getProductDetail(p)
-            # except Exception, e:
-            #     pass
-            
-            # print p
-            # time.sleep(1)
 
         return products
 
@@ -165,11 +157,11 @@ class JDProductSpider(BaseSpider):
         except Exception, e:
             print "getProductDetail exception:", e
 
+        
         details = doc.xpath("//div[@id='product-detail-1']//div[@class='detail-content-item']")
         if len(details) > 0:
             detail_item = details[0]
             imgs = detail_item.xpath(".//img[@data-lazyload]")
-            # print "len(imgs)", len(imgs)
             for img in imgs:
                 img_url = img.get("data-lazyload")
                 img.set("data-lazyload", "done")
@@ -178,7 +170,7 @@ class JDProductSpider(BaseSpider):
 
             detail = etree.tostring(details[0], encoding="utf-8", pretty_print=True).replace("    ", "")
             product.setProductDetail(detail)
-        
+
         # node.keys() element节点的所有的属性key
         # node.values() 所有key对应的values
         # print product
@@ -209,6 +201,8 @@ class JDProductSpider(BaseSpider):
                     continue
 
                 # 不数据库中，插入需要更新数据中
+                # 获取商品详情
+                self.getProductDetail(product)
                 print product
                 if self.insert(JDProductSpider._INSERT_COMMAND, product.toTuple()):
                     succCount += 1
@@ -238,12 +232,6 @@ def main():
     user=JDConstants.MYSQL_PASSPORT
     passwd=JDConstants.MYSQL_PASSWORD
     db=JDConstants.MYSQL_DATABASE
-
-    # if platform.system() == 'Windows':
-    #     host="localhost"
-    #     user="root"
-    #     passwd="123456"
-    #     db="spider"
 
     spider = JDProductSpider(host, user, passwd, db)
     spider.start()

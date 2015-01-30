@@ -83,7 +83,7 @@ class BaseSpider:
         # print "Request Url:", command.encode("utf-8")
         if (not os.path.isfile(target_path)) or force_update:
             state = os.system(command.encode("utf-8")) # 在windows下是gb2312, 在ubuntu主机上应该是utf-8
-            print state
+            print url, "download successful!"
         else:
             print url, "is already downloaded!"
 

@@ -27,3 +27,4 @@ def openLogFile(filename=None, mode="a+"):
 def md5(source):
     result = hashlib.md5(source.encode('utf-8')).hexdigest()
     return result
+    
