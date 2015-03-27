@@ -14,3 +14,8 @@ if DEBUG:
     MYSQL_PASSPORT="root"
     MYSQL_PASSWORD="123456"
     MYSQL_DATABASE="spider"
+
+URL_MAP = {
+    "all": "http://www.appannie.com/apps/ios/top/china/overall/?device=iphone",
+    "music": "http://www.appannie.com/apps/ios/top/china/music/?device=iphone"
+}

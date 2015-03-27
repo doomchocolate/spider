@@ -1,6 +1,8 @@
 #encoding=utf-8
 from __future__ import unicode_literals
 
+import time
+
 class AppInfo:
     def __init__(self, trackid=-1, name=None, icon=None):
         self.trackid = trackid
@@ -18,7 +20,7 @@ class AppInfo:
         return log
 
     def toTuple(self):
-        return (self.trackid, self.name, self.icon60, self.icon512)
+        return (self.trackid, self.name, self.icon60, self.icon512, time.strftime("%Y_%m_%d_%H"))
 
     def setAppInfo(self, appInfo):
         self.trackid = appInfo.get("trackId")

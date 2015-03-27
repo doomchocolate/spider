@@ -29,6 +29,7 @@ class AppStoreSpider(BaseSpider):
           `scheme` TEXT NULL,\
           `icon60` TEXT NULL,\
           `icon512` TEXT NULL,\
+          `addtime` TEXT NULL,\
           PRIMARY KEY (`id`));'%_APPSTORE_TABLE_NAME
 
     def __init__(self, host=Constants.MYSQL_HOST, user=Constants.MYSQL_PASSPORT, passwd=Constants.MYSQL_PASSWORD, db=Constants.MYSQL_DATABASE):
@@ -37,9 +38,6 @@ class AppStoreSpider(BaseSpider):
         # if AppStoreConstants.DEBUG:
         #     print "clear table", _APPSTORE_TABLE_NAME
         #     self.clearTable(_APPSTORE_TABLE_NAME)
-
-        self.htmlCacheDir = "cache" + os.path.sep + _APPSTORE_TABLE_NAME + os.path.sep + 'html'
-        self.cacheFileName = "annie_%s.html"%time.strftime("%Y_%m_%H")
 
     def getUrlContent(self, url):
         target_path = os.path.join(".", self.htmlCacheDir)
@@ -94,12 +92,15 @@ class AppStoreSpider(BaseSpider):
         #     print i
 
     def insertToDB(self, appInfo):
-        _INSERT_COMMAND = 'insert into %s (trackid, name, icon60, icon512) values '%_APPSTORE_TABLE_NAME + "(%s,%s,%s,%s)"
+        _INSERT_COMMAND = 'insert into %s (trackid, name, icon60, icon512, addtime) values '%_APPSTORE_TABLE_NAME + "(%s,%s,%s,%s,%s)"
 
         if not self.isInTable(_APPSTORE_TABLE_NAME, "trackid", appInfo.trackid):
             self.insert(_INSERT_COMMAND, appInfo.toTuple())
             print "insert to database:", appInfo.name
+        else:
+            print "%s already in database!"%appInfo.name
             # print appInfo
+        # exit()
 
     def getAppIcon(self, trackid):
         # https://itunes.apple.com/lookup?id=414478124&country=cn
@@ -114,10 +115,68 @@ class AppStoreSpider(BaseSpider):
 
         return appInfo
 
+    def getCategorys(self, contents):
+        doc = etree.HTML(contents)
+
+        # 获取每一行，一行由3个内容组成， 免费榜, 付费榜，畅销榜组成
+        categorys = doc.xpath("//ul[@class='picker-col']/li")
+        for category in categorys:
+            print category
+        
+
     def start(self):
-        spiderUrl = "http://www.appannie.com/apps/ios/top/china/overall/?device=iphone"
-        contents = self.getUrlContent(spiderUrl)
-        self.getApps(contents)
+        categorys = ["overall", "music"]
+        self.htmlCacheDir = "cache" + os.path.sep + _APPSTORE_TABLE_NAME + os.path.sep + 'html'
+
+        for category in categorys:
+            self.cacheFileName = "%s_%s.html"%(category, time.strftime("%Y_%m_%d_%H"))
+
+            spiderUrl = "http://www.appannie.com/apps/ios/top/china/%s/?device=iphone"%category
+            contents = self.getUrlContent(spiderUrl)
+            
+            # self.cacheFileName = "annie.html"
+            
+            self.getApps(contents)
+            # self.getCategorys(contents)
+
+        self.finish()
+
+    def validateData(self):
+        # 在schemeApps.json查找已经定义了的应用的scheme
+        a = open("./AppStore/schemeApps.json", "r")
+        allSchemes = json.load(a)
+        # print len(allSchemes), type(allSchemes)
+
+        schemeMap = {}
+
+        for scheme in allSchemes.keys():
+            # print scheme, type(allSchemes[scheme])
+            for trackid in allSchemes.get(scheme):
+                schemes = []
+                if schemeMap.has_key(trackid):
+                    schemes = schemeMap[trackid]
+                schemes.append(scheme)
+                schemeMap[trackid] = schemes
+        print "Load scheme map finish!", len(schemeMap.keys())
+
+        queryCmd = "select trackid, name from %s"%_APPSTORE_TABLE_NAME
+        try:
+            self.mysqlCur.execute(queryCmd)
+            results = self.mysqlCur.fetchall()
+            trackids = map(lambda x: int(x[0]), results)
+            names = map(lambda x: x[1], results)
+            count = 0
+            for trackid in trackids:
+                if schemeMap.has_key(trackid):
+                    # 目前有scheme的应用
+                    print trackid, schemeMap.get(trackid), names[count]
+                    # update cmd
+                    updateCmd ="UPDATE appstores SET `scheme`='%s' WHERE `trackid`='%s';"%(":".join(schemeMap.get(trackid)), trackid)
+                    self.mysqlCur.execute(updateCmd)
+                    print updateCmd
+                count += 1
+        except Exception, e:
+            print e
 
         self.finish()
 
@@ -129,7 +188,8 @@ def main():
     db=AppStoreConstants.MYSQL_DATABASE
 
     spider = AppStoreSpider(host, user, passwd, db)
-    spider.start()
+    # spider.start()
+    spider.validateData()
 
 if __name__=="__main__":
     reload(sys)

@@ -85,7 +85,8 @@ class BaseSpider:
             state = os.system(command.encode("utf-8")) # 在windows下是gb2312, 在ubuntu主机上应该是utf-8
             print url, "download successful!"
         else:
-            print url, "is already downloaded!"
+            # print url, "is already downloaded!"
+            pass
 
         if ext[1:].lower() in PIC_SUFFIX:
             return target_path
@@ -109,36 +110,36 @@ class BaseSpider:
 
     # 检查某个值是否已经存在
     def isInTable(self, tableName, key, value):
-        _key = tableName + key
-        valueTable = str(value)
-        if self.valueTable.has_key(_key):
-            if value in self.valueTable[_key]:
-                return True
-            else:
-                return False
+        # _key = tableName + key
+        # valueTable = str(value)
+        # if self.valueTable.has_key(_key):
+        #     if value in self.valueTable[_key]:
+        #         return True
+        #     else:
+        #         return False
 
-        command = 'select `%s` from `%s`'%(key, tableName)
-        try:
-            self.mysqlCur.execute(command)
-            self.valueTable[_key] = map(lambda x: x[0], self.mysqlCur.fetchall())
-            self.valueTable[_key] = map(str, self.valueTable[_key])
-            if value in self.valueTable[_key]:
-                return True
-        except Exception, e:
-            print e
-        
-        return False
-
-        # command = 'select count(id) from `%s` where `%s`="%s"'%(tableName, key, str(value))
-        # inTable = False
+        # command = 'select `%s` from `%s`'%(key, tableName)
         # try:
         #     self.mysqlCur.execute(command)
-        #     if self.mysqlCur.fetchone()[0] > 0:
-        #         inTable = True
+        #     self.valueTable[_key] = map(lambda x: x[0], self.mysqlCur.fetchall())
+        #     self.valueTable[_key] = map(str, self.valueTable[_key])
+        #     if value in self.valueTable[_key]:
+        #         return True
         # except Exception, e:
         #     print e
+        
+        # return False
 
-        # return inTable
+        command = 'select count(id) from `%s` where `%s`="%s"'%(tableName, key, str(value))
+        inTable = False
+        try:
+            self.mysqlCur.execute(command)
+            if self.mysqlCur.fetchone()[0] > 0:
+                inTable = True
+        except Exception, e:
+            print e
+
+        return inTable
 
 
     def insert(self, command, value):
