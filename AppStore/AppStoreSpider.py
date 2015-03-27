@@ -35,6 +35,8 @@ class AppStoreSpider(BaseSpider):
     def __init__(self, host=Constants.MYSQL_HOST, user=Constants.MYSQL_PASSPORT, passwd=Constants.MYSQL_PASSWORD, db=Constants.MYSQL_DATABASE):
         BaseSpider.__init__(self, AppStoreSpider._CREATE_COMMAND, host, user, passwd, db)
 
+        self.htmlCacheDir = "cache" + os.path.sep + _APPSTORE_TABLE_NAME + os.path.sep + 'html'
+
         # if AppStoreConstants.DEBUG:
         #     print "clear table", _APPSTORE_TABLE_NAME
         #     self.clearTable(_APPSTORE_TABLE_NAME)
@@ -92,7 +94,7 @@ class AppStoreSpider(BaseSpider):
         #     print i
 
     def insertToDB(self, appInfo):
-        _INSERT_COMMAND = 'insert into %s (trackid, name, icon60, icon512, addtime) values '%_APPSTORE_TABLE_NAME + "(%s,%s,%s,%s,%s)"
+        _INSERT_COMMAND = 'insert into %s (trackid, name, scheme, icon60, icon512, addtime) values '%_APPSTORE_TABLE_NAME + "(%s,%s,%s,%s,%s,%s)"
 
         if not self.isInTable(_APPSTORE_TABLE_NAME, "trackid", appInfo.trackid):
             self.insert(_INSERT_COMMAND, appInfo.toTuple())
@@ -126,7 +128,6 @@ class AppStoreSpider(BaseSpider):
 
     def start(self):
         categorys = ["overall", "music"]
-        self.htmlCacheDir = "cache" + os.path.sep + _APPSTORE_TABLE_NAME + os.path.sep + 'html'
 
         for category in categorys:
             self.cacheFileName = "%s_%s.html"%(category, time.strftime("%Y_%m_%d_%H"))
@@ -180,6 +181,99 @@ class AppStoreSpider(BaseSpider):
 
         self.finish()
 
+    def paserAppList(self):
+        # 将AppList.plist中的scheme提炼出来,并存入数据库中
+        doc = etree.HTML(open("./AppStore/AppList.plist.xml", "r").read())
+
+        # 获取每一行，一行由3个内容组成， 免费榜, 付费榜，畅销榜组成
+        categorys = doc.xpath("//plist/dict/array/dict")
+
+        count = 0
+        for category in categorys:
+            count += 1
+            if count % 50 == 0:
+                self.commit()
+
+            children = category.getchildren()
+
+            trackid = -1
+            appName = ""
+            appScheme = ""
+
+            index = 0
+            while index < len(children):
+                child = children[index]
+
+                # 获得track id
+                if child.tag == "key":
+                    if child.text == "id":
+                        trackid = children[index+1].text
+
+                # 获得app name
+                if child.tag == "key":
+                    if child.text == "nm":
+                        appName = children[index+1].text
+
+                index += 1
+
+            # 获取shceme
+            schemeInfo = category.xpath("./array/dict")[0]
+            children = schemeInfo.getchildren()
+            index = 0
+            while index < len(children):
+                child = children[index]
+
+                # 获得track id
+                if child.tag == "key":
+                    if child.text == "url":
+                        appScheme = children[index+1].text
+                        break
+                index += 1
+
+            print trackid, appName, appScheme
+            if int(trackid) < 100000:
+                # 系统应用，暂时忽略
+                pass
+            else:
+                appInfo = self.getAppIcon(trackid)
+                if appInfo is not None:
+                    # print "get app info:", appInfo
+                    appInfo.scheme = appScheme.replace('://', '')
+                    if not self.isInTable(_APPSTORE_TABLE_NAME, "trackid", trackid):
+                        print "not in table!"
+                        self.insertToDB(appInfo)
+                        print "insert:"
+                    else:
+                        # 更新scheme
+                        updateCmd ="UPDATE appstores SET `scheme`='%s' WHERE `trackid`='%s';"%(appInfo.scheme, trackid)
+                        self.mysqlCur.execute(updateCmd)
+                        print "update:"
+
+                    print " ", appInfo
+                else:
+                    print " ", trackid, appName, " not exsits.\n"
+
+        self.finish()
+
+    def generateSchemeList(self):
+        queryCmd = "select * from %s where scheme != '';"%_APPSTORE_TABLE_NAME
+        self.mysqlCur.execute(queryCmd)
+        results = self.mysqlCur.fetchall()
+        schemeList = {}
+        for info in results:
+            appInfo = AppInfo()
+            appInfo.trackid = info[1]
+            appInfo.name = info[2]
+            schemes = info[3].split(":")
+            appInfo.icon60 = info[4]
+            appInfo.icon512 = info[5]
+            for scheme in schemes:
+                if len(scheme.strip()) == 0:
+                    continue
+                schemeList[scheme] = appInfo.toDict()
+
+        content = json.dumps(schemeList, indent=4)
+        open("./AppStore/extSchemeApps.json.1", "w").write(content)
 
 def main():
     host=AppStoreConstants.MYSQL_HOST
@@ -188,8 +282,34 @@ def main():
     db=AppStoreConstants.MYSQL_DATABASE
 
     spider = AppStoreSpider(host, user, passwd, db)
-    # spider.start()
+    spider.start()
+
+def validateData():
+    host=AppStoreConstants.MYSQL_HOST
+    user=AppStoreConstants.MYSQL_PASSPORT
+    passwd=AppStoreConstants.MYSQL_PASSWORD
+    db=AppStoreConstants.MYSQL_DATABASE
+
+    spider = AppStoreSpider(host, user, passwd, db)
     spider.validateData()
+
+def paserAppList():
+    host=AppStoreConstants.MYSQL_HOST
+    user=AppStoreConstants.MYSQL_PASSPORT
+    passwd=AppStoreConstants.MYSQL_PASSWORD
+    db=AppStoreConstants.MYSQL_DATABASE
+
+    spider = AppStoreSpider(host, user, passwd, db)
+    spider.paserAppList()
+
+def generateSchemeList():
+    host=AppStoreConstants.MYSQL_HOST
+    user=AppStoreConstants.MYSQL_PASSPORT
+    passwd=AppStoreConstants.MYSQL_PASSWORD
+    db=AppStoreConstants.MYSQL_DATABASE
+
+    spider = AppStoreSpider(host, user, passwd, db)
+    spider.generateSchemeList()
 
 if __name__=="__main__":
     reload(sys)
@@ -208,6 +328,7 @@ if __name__=="__main__":
     print "Start AppStore Spider:", time.asctime()
 
     main()
+    # print generateSchemeList()
 
     logFile.close()  
     if oldStdout:  

@@ -50,6 +50,8 @@ class BaseSpider:
 
         self.valueTable = {} # 主要用于缓存isInTable的数据
 
+        print self.mysqlCur, "###########"
+
     # 获取url的内容, 如果是图片，返回图片的地址
     # 如果js_enable为True, 则使用phantomjs进行获取网页地址
     def requestUrlContent(self, url, cache_dir=None, filename=None, js_enable=False, force_update=False):
@@ -143,7 +145,7 @@ class BaseSpider:
 
 
     def insert(self, command, value):
-        print "插入数据库"
+        # print "插入数据库"
         result = False
         try:
             result = self.mysqlCur.execute(command, value)

@@ -2,12 +2,12 @@ import platform
 DEBUG = False
 
 if platform.system() == 'Windows':
-    DEBUG = True
+    DEBUG = False
 
-MYSQL_HOST     = "iam007.cskkndpfwwgp.ap-northeast-1.rds.amazonaws.com"
+MYSQL_HOST     = "jiangerji.mysql.rds.aliyuncs.com"
 MYSQL_PASSPORT = "jiangerji"
 MYSQL_PASSWORD = "eMBWzH5SIFJw5I4c"
-MYSQL_DATABASE = "baidu"
+MYSQL_DATABASE = "spider"
 
 if DEBUG:
     MYSQL_HOST="localhost"

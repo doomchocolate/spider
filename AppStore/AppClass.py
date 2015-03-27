@@ -16,11 +16,20 @@ class AppInfo:
         log += "    %8s: %s\n"%("scheme", self.scheme)
         log += "    %8s: %s\n"%("icon60", self.icon60)
         log += "    %8s: %s\n"%("icon512", self.icon512)
-        log += "    %8s: %s\n"%("desc", self.desc)
+        # log += "    %8s: %s\n"%("desc", self.desc)
         return log
 
     def toTuple(self):
-        return (self.trackid, self.name, self.icon60, self.icon512, time.strftime("%Y_%m_%d_%H"))
+        return (self.trackid, self.name, self.scheme, self.icon60, self.icon512, time.strftime("%Y_%m_%d_%H"))
+
+    def toDict(self):
+        result = {}
+        result["id"] = self.trackid
+        result["name"] = self.name
+        result["icon60"] = self.icon60
+        result["icon512"] = self.icon512
+        
+        return result
 
     def setAppInfo(self, appInfo):
         self.trackid = appInfo.get("trackId")
