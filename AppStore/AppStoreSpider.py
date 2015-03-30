@@ -30,6 +30,7 @@ class AppStoreSpider(BaseSpider):
           `icon60` TEXT NULL,\
           `icon512` TEXT NULL,\
           `addtime` TEXT NULL,\
+          `version` INT NULL DEFAULT -1,\
           PRIMARY KEY (`id`));'%_APPSTORE_TABLE_NAME
 
     def __init__(self, host=Constants.MYSQL_HOST, user=Constants.MYSQL_PASSPORT, passwd=Constants.MYSQL_PASSWORD, db=Constants.MYSQL_DATABASE):
@@ -96,6 +97,7 @@ class AppStoreSpider(BaseSpider):
         # 打印需要插入的app
         # for i in appsList:
         #     print i
+        exit()
 
     def insertToDB(self, appInfo):
         _INSERT_COMMAND = 'insert into %s (trackid, name, scheme, icon60, icon512, addtime) values '%_APPSTORE_TABLE_NAME + "(%s,%s,%s,%s,%s,%s)"
@@ -119,24 +121,26 @@ class AppStoreSpider(BaseSpider):
             appInfo = AppInfo()
             appInfo.setAppInfo(results[0])
 
+            icons = self.updateIcon60to175(trackid)
+            print "icon:", appInfo.trackid, icons
+            if icons is not None:
+                (icon60, icon512) = icons
+                if icon60 is not None:
+                    appInfo.icon60 = icon60
+                if icon512 is not None:
+                    appInfo.icon512 = icon512
+
         return appInfo
 
-    def getCategorys(self, contents):
-        doc = etree.HTML(contents)
-
-        # 获取每一行，一行由3个内容组成， 免费榜, 付费榜，畅销榜组成
-        categorys = doc.xpath("//ul[@class='picker-col']/li")
-        for category in categorys:
-            print category
-        
-
     def start(self):
-        categorys = ["overall", "music"]
+        categorys = ["overall", "books", "business", "catalogs", "education", "entertainment", "finance", "food-and-drink", "games", "health-and-fitness", "kids", "lifestyle", "medical", "music", "navigation", "news", "newsstand", "photo-and-video", "productivity", "reference", "social-networking", "sports", "travel", "utilities", "weather"]
+        categorys = ["news"]
 
         for category in categorys:
-            self.cacheFileName = "%s_%s.html"%(category, time.strftime("%Y_%m_%d_%H"))
+            self.cacheFileName = "annie_%s_%s.html"%(category, time.strftime("%Y_%m_%d_%H"))
 
             spiderUrl = "http://www.appannie.com/apps/ios/top/china/%s/?device=iphone"%category
+            cacheFile = os.path.join(self.htmlCacheDir, "")
             contents = self.getUrlContent(spiderUrl)
             
             # self.cacheFileName = "annie.html"
@@ -185,16 +189,26 @@ class AppStoreSpider(BaseSpider):
 
         self.finish()
 
-    def updateIcon60to175(self):
+    def updateIcon60to175(self, trackid=None):
         urlFormat = "https://itunes.apple.com/cn/app/id%s?mt=8"
 
-        queryCmd = "select trackid from %s;"%_APPSTORE_TABLE_NAME
-        self.mysqlCur.execute(queryCmd)
+        results = []
+        needCommit = False
+        if trackid is None:
+            queryCmd = "select trackid from %s;"%_APPSTORE_TABLE_NAME
+            self.mysqlCur.execute(queryCmd)
 
-        results = self.mysqlCur.fetchall()
+            results = self.mysqlCur.fetchall()
+            needCommit = True
+        else:
+            results.append(trackid)
         count = 0
         for i in results:
-            trackid = i[0]
+            if trackid is None:
+                trackid = i[0]
+            else:
+                trackid = i
+
             url = urlFormat%i
 
             cacheFile = os.path.join(self.htmlCacheDir, "itunes_%s.html"%trackid)
@@ -206,19 +220,24 @@ class AppStoreSpider(BaseSpider):
 
             doc = etree.HTML(content)
 
-            rows = doc.xpath("//div[@class='lockup product application']//img[@class='artwork']")
+            rows = doc.xpath("//div[@id='left-stack']//img[@class='artwork']")
             for row in rows:
                 icon60 = row.get("src")
                 icon512 = row.get("src-swap-high-dpi")
 
-                updateCmd = "UPDATE appstores SET `icon60`='%s', icon512='%s' WHERE `trackid`='%s';"%(icon60, icon512, trackid)
-                self.mysqlCur.execute(updateCmd)
+                if trackid is None:
+                    updateCmd = "UPDATE appstores SET `icon60`='%s', icon512='%s' WHERE `trackid`='%s';"%(icon60, icon512, trackid)
+                    self.mysqlCur.execute(updateCmd)
+                else:
+                    return (icon60, icon512)
+
+                break
 
             count += 1
             # if count > 50:#debug
             #     break
-
-        self.finish()
+        if needCommit:
+            self.finish()
 
 
     def paserAppList(self):
@@ -296,6 +315,49 @@ class AppStoreSpider(BaseSpider):
         self.finish()
 
     def generateSchemeList(self):
+        # 获取最大版本号
+        cmd = 'select max(version) from appstores where version > 0;'
+        self.mysqlCur.execute(cmd)
+        maxVersion = self.mysqlCur.fetchone()[0]
+        print "当前最大版本号:", maxVersion
+
+        # 判断是否更新的scheme
+        cmd = 'select count(id) from appstores where scheme is not null and version=-1;'
+        self.mysqlCur.execute(cmd)
+        needUpdate = self.mysqlCur.fetchone()[0] > 0
+        print "当前需要更新:", needUpdate
+
+        if needUpdate:
+            cmd = 'update appstores set version=%d where scheme is not null and version=-1;'%(maxVersion+1)
+            self.mysqlCur.execute(cmd)
+            self.commit()
+            print "更新新版本"
+            maxVersion += 1
+
+
+        # 生成scheme json数据
+        for i in range(1, maxVersion+1):
+            for j in range(i+1, maxVersion+1):
+                cmd = 'select * from appstores where version > %d and version <=%d and scheme is not null;'%(i, j)
+                self.mysqlCur.execute(cmd)
+                results = self.mysqlCur.fetchall()
+                schemeList = {}
+                for info in results:
+                    appInfo = AppInfo()
+                    appInfo.trackid = info[1]
+                    appInfo.name = info[2]
+                    schemes = info[3].split(":")
+                    appInfo.icon60 = info[4]
+                    appInfo.icon512 = info[5]
+                    for scheme in schemes:
+                        if len(scheme.strip()) == 0:
+                            continue
+                        schemeList[scheme] = appInfo.toDict()
+
+                content = json.dumps(schemeList, indent=4)
+                open("./AppStore/scheme/extSchemeApps_%d_%d.json"%(j, i), "w").write(content)
+
+        # 生成最新所有的scheme json数据
         queryCmd = "select * from %s where scheme != '';"%_APPSTORE_TABLE_NAME
         self.mysqlCur.execute(queryCmd)
         results = self.mysqlCur.fetchall()
@@ -322,8 +384,8 @@ def main():
     db=AppStoreConstants.MYSQL_DATABASE
 
     spider = AppStoreSpider(host, user, passwd, db)
-    # spider.start()
-    spider.updateIcon60to175()
+    spider.start()
+    # spider.updateIcon60to175()
 
 def validateData():
     host=AppStoreConstants.MYSQL_HOST
@@ -372,6 +434,7 @@ if __name__=="__main__":
         generateSchemeList()
     else:
         main()
+        # generateSchemeList()
 
     logFile.close()  
     if oldStdout:  
