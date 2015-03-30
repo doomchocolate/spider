@@ -374,7 +374,7 @@ class AppStoreSpider(BaseSpider):
                     continue
                 schemeList[scheme] = appInfo.toDict()
 
-        schemeList["schemeJsonVersion"] = maxVersion
+        # schemeList["schemeJsonVersion"] = maxVersion
         content = json.dumps(schemeList, indent=4)
         open("./AppStore/extSchemeApps.json.1", "w").write(content)
 
