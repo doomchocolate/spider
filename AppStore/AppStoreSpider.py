@@ -111,30 +111,35 @@ class AppStoreSpider(BaseSpider):
         # exit()
 
     def getAppIcon(self, trackid):
-        # https://itunes.apple.com/lookup?id=414478124&country=cn
-        url = "https://itunes.apple.com/lookup?id=%s&country=cn"%trackid
-        appInfoJson = json.loads(self.requestUrlContent(url, self.htmlCacheDir, "app_%s.html"%trackid))
-        results = appInfoJson.get("results")
-        # print len(results), results
         appInfo = None
-        if len(results) > 0:
-            appInfo = AppInfo()
-            appInfo.setAppInfo(results[0])
 
-            icons = self.updateIcon60to175(trackid)
-            print "icon:", appInfo.trackid, icons
-            if icons is not None:
-                (icon60, icon512) = icons
-                if icon60 is not None:
-                    appInfo.icon60 = icon60
-                if icon512 is not None:
-                    appInfo.icon512 = icon512
+        try:
+            # https://itunes.apple.com/lookup?id=414478124&country=cn
+            url = "https://itunes.apple.com/lookup?id=%s&country=cn"%trackid
+            appInfoJson = json.loads(self.requestUrlContent(url, self.htmlCacheDir, "app_%s.html"%trackid))
+            results = appInfoJson.get("results")
+            # print len(results), results
+            
+            if len(results) > 0:
+                appInfo = AppInfo()
+                appInfo.setAppInfo(results[0])
+
+                icons = self.updateIcon60to175(trackid)
+                print "icon:", appInfo.trackid, icons
+                if icons is not None:
+                    (icon60, icon512) = icons
+                    if icon60 is not None:
+                        appInfo.icon60 = icon60
+                    if icon512 is not None:
+                        appInfo.icon512 = icon512
+        except Exception, e:
+            print "get trackid except:", e
 
         return appInfo
 
     def start(self):
-        categorys = ["overall", "books", "business", "catalogs", "education", "entertainment", "finance", "food-and-drink", "games", "health-and-fitness", "kids", "lifestyle", "medical", "music", "navigation", "news", "newsstand", "photo-and-video", "productivity", "reference", "social-networking", "sports", "travel", "utilities", "weather"]
-        categorys = ["news"]
+        categorys = ["overall", "games", "music", "entertainment", "news", "utilities", "books", "business", "catalogs", "education", "finance", "food-and-drink", "health-and-fitness", "kids", "lifestyle", "medical", , "navigation", "newsstand", "photo-and-video", "productivity", "reference", "social-networking", "sports", "travel", "weather"]
+        # categorys = ["news"]
 
         for category in categorys:
             self.cacheFileName = "annie_%s_%s.html"%(category, time.strftime("%Y_%m_%d_%H"))
