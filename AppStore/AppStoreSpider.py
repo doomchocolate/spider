@@ -36,14 +36,18 @@ class AppStoreSpider(BaseSpider):
         BaseSpider.__init__(self, AppStoreSpider._CREATE_COMMAND, host, user, passwd, db)
 
         self.htmlCacheDir = "cache" + os.path.sep + _APPSTORE_TABLE_NAME + os.path.sep + 'html'
+        self.cacheFileName = ""
 
         # if AppStoreConstants.DEBUG:
         #     print "clear table", _APPSTORE_TABLE_NAME
         #     self.clearTable(_APPSTORE_TABLE_NAME)
 
-    def getUrlContent(self, url):
+    def getUrlContent(self, url, cacheFile=None):
         target_path = os.path.join(".", self.htmlCacheDir)
         target_path = os.path.join(target_path, self.cacheFileName)
+
+        if cacheFile is not None:
+            target_path = cacheFile
 
         if not os.path.isfile(target_path):
             load_web_page_js_dir = os.path.join(".", "bin")
@@ -181,6 +185,42 @@ class AppStoreSpider(BaseSpider):
 
         self.finish()
 
+    def updateIcon60to175(self):
+        urlFormat = "https://itunes.apple.com/cn/app/id%s?mt=8"
+
+        queryCmd = "select trackid from %s;"%_APPSTORE_TABLE_NAME
+        self.mysqlCur.execute(queryCmd)
+
+        results = self.mysqlCur.fetchall()
+        count = 0
+        for i in results:
+            trackid = i[0]
+            url = urlFormat%i
+
+            cacheFile = os.path.join(self.htmlCacheDir, "itunes_%s.html"%trackid)
+            content = None
+            try:
+                content = self.getUrlContent(url, cacheFile)
+            except Exception, e:
+                continue
+
+            doc = etree.HTML(content)
+
+            rows = doc.xpath("//div[@class='lockup product application']//img[@class='artwork']")
+            for row in rows:
+                icon60 = row.get("src")
+                icon512 = row.get("src-swap-high-dpi")
+
+                updateCmd = "UPDATE appstores SET `icon60`='%s', icon512='%s' WHERE `trackid`='%s';"%(icon60, icon512, trackid)
+                self.mysqlCur.execute(updateCmd)
+
+            count += 1
+            # if count > 50:#debug
+            #     break
+
+        self.finish()
+
+
     def paserAppList(self):
         # 将AppList.plist中的scheme提炼出来,并存入数据库中
         doc = etree.HTML(open("./AppStore/AppList.plist.xml", "r").read())
@@ -282,7 +322,8 @@ def main():
     db=AppStoreConstants.MYSQL_DATABASE
 
     spider = AppStoreSpider(host, user, passwd, db)
-    spider.start()
+    # spider.start()
+    spider.updateIcon60to175()
 
 def validateData():
     host=AppStoreConstants.MYSQL_HOST
@@ -327,8 +368,10 @@ if __name__=="__main__":
     print "change work direcotory to workDir", workDir
     print "Start AppStore Spider:", time.asctime()
 
-    main()
-    # print generateSchemeList()
+    if "generate" in sys.argv:
+        generateSchemeList()
+    else:
+        main()
 
     logFile.close()  
     if oldStdout:  
