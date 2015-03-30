@@ -138,7 +138,7 @@ class AppStoreSpider(BaseSpider):
         return appInfo
 
     def start(self):
-        categorys = ["overall", "games", "music", "entertainment", "news", "utilities", "books", "business", "catalogs", "education", "finance", "food-and-drink", "health-and-fitness", "kids", "lifestyle", "medical", , "navigation", "newsstand", "photo-and-video", "productivity", "reference", "social-networking", "sports", "travel", "weather"]
+        categorys = ["overall", "games", "music", "entertainment", "social-networking", "news", "utilities", "books", "business", "catalogs", "education", "finance", "food-and-drink", "health-and-fitness", "kids", "lifestyle", "medical", "navigation", "newsstand", "photo-and-video", "productivity", "reference", "sports", "travel", "weather"]
         # categorys = ["news"]
 
         for category in categorys:
