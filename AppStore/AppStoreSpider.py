@@ -115,7 +115,7 @@ class AppStoreSpider(BaseSpider):
 
         try:
             # https://itunes.apple.com/lookup?id=414478124&country=cn
-            url = "https://itunes.apple.com/lookup?id=%s&country=cn"%trackid
+            url = "https://itunes.apple.com/lookup?id=%s"%trackid
             appInfoJson = json.loads(self.requestUrlContent(url, self.htmlCacheDir, "app_%s.html"%trackid))
             results = appInfoJson.get("results")
             # print len(results), results
@@ -249,7 +249,6 @@ class AppStoreSpider(BaseSpider):
         # 将AppList.plist中的scheme提炼出来,并存入数据库中
         doc = etree.HTML(open("./AppStore/AppList.plist.xml", "r").read())
 
-        # 获取每一行，一行由3个内容组成， 免费榜, 付费榜，畅销榜组成
         categorys = doc.xpath("//plist/dict/array/dict")
 
         count = 0
@@ -295,6 +294,20 @@ class AppStoreSpider(BaseSpider):
                 index += 1
 
             print trackid, appName, appScheme
+
+            if int(trackid) < 100000:
+                continue
+
+            # 如果trackid的app 已经保存了scheme, 不进行处理了
+            cmd = 'select count(*) from %s where trackid=%s and (scheme is not null and scheme != "");'%(_APPSTORE_TABLE_NAME, trackid)
+            try:
+                self.mysqlCur.execute(cmd)
+                if self.mysqlCur.fetchone()[0] > 0:
+                    print "#Already handle", trackid, "\n"
+                    continue
+            except Exception, e:
+                pass
+
             if int(trackid) < 100000:
                 # 系统应用，暂时忽略
                 pass
@@ -439,7 +452,8 @@ if __name__=="__main__":
     if "generate" in sys.argv:
         generateSchemeList()
     else:
-        main()
+        # main()
+        paserAppList()
         # generateSchemeList()
 
     logFile.close()  
