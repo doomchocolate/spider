@@ -97,7 +97,7 @@ class AppStoreSpider(BaseSpider):
         # 打印需要插入的app
         # for i in appsList:
         #     print i
-        exit()
+        # exit()
 
     def insertToDB(self, appInfo):
         _INSERT_COMMAND = 'insert into %s (trackid, name, scheme, icon60, icon512, addtime) values '%_APPSTORE_TABLE_NAME + "(%s,%s,%s,%s,%s,%s)"
