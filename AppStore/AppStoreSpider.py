@@ -396,6 +396,11 @@ class AppStoreSpider(BaseSpider):
         content = json.dumps(schemeList, indent=4)
         open("./AppStore/extSchemeApps.json.1", "w").write(content)
 
+    def clearTask(self):
+        cmd = 'delete from taskstate where unix_timestamp(now()) - unix_timestamp(`timestamp`) >1800;'
+        self.mysqlCur.execute(cmd)
+        self.finish()
+
 def main():
     host=AppStoreConstants.MYSQL_HOST
     user=AppStoreConstants.MYSQL_PASSPORT
@@ -433,6 +438,15 @@ def generateSchemeList():
     spider = AppStoreSpider(host, user, passwd, db)
     spider.generateSchemeList()
 
+def clearTask():
+    host=AppStoreConstants.MYSQL_HOST
+    user=AppStoreConstants.MYSQL_PASSPORT
+    passwd=AppStoreConstants.MYSQL_PASSWORD
+    db=AppStoreConstants.MYSQL_DATABASE
+
+    spider = AppStoreSpider(host, user, passwd, db)
+    spider.clearTask()
+
 if __name__=="__main__":
     reload(sys)
     sys.setdefaultencoding('utf-8')
@@ -451,9 +465,13 @@ if __name__=="__main__":
 
     if "generate" in sys.argv:
         generateSchemeList()
-    else:
-        # main()
+    elif "parse" in sys.argv:
         paserAppList()
+    elif "clear" in sys.argv:
+        clearTask()
+    else:
+        main()
+        # clearTask()
         # generateSchemeList()
 
     logFile.close()  
