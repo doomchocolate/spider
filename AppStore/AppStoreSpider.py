@@ -138,16 +138,17 @@ class AppStoreSpider(BaseSpider):
 
         for category in categorys:
             print "###start process", category
-            self.cacheFileName = "annie_%s_%s.html"%(category, time.strftime("%Y_%m_%d_%H"))
 
-            spiderUrl = "http://www.appannie.com/apps/ios/top/china/%s/?device=iphone"%category
-            cacheFile = os.path.join(self.htmlCacheDir, "")
-            contents = self.getUrlContent(spiderUrl)
-            
-            # self.cacheFileName = "annie.html"
-            
-            self.getApps(contents)
-            # self.getCategorys(contents)
+            try:
+                self.cacheFileName = "annie_%s_%s.html"%(category, time.strftime("%Y_%m_%d_%H"))
+
+                spiderUrl = "http://www.appannie.com/apps/ios/top/china/%s/?device=iphone"%category
+                cacheFile = os.path.join(self.htmlCacheDir, "")
+                contents = self.getUrlContent(spiderUrl)
+                
+                self.getApps(contents)
+            except Exception, e:
+                print "***process", category, "exception", e
 
         self.finish()
 
