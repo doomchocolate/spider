@@ -39,6 +39,8 @@ class AppStoreSpider(BaseSpider):
         self.htmlCacheDir = "cache" + os.path.sep + _APPSTORE_TABLE_NAME + os.path.sep + 'html'
         self.cacheFileName = ""
 
+        self.appsTrackIds = set()
+
         # if AppStoreConstants.DEBUG:
         #     print "clear table", _APPSTORE_TABLE_NAME
         #     self.clearTable(_APPSTORE_TABLE_NAME)
@@ -68,7 +70,7 @@ class AppStoreSpider(BaseSpider):
         rowCount = 1
 
         appsList = []
-        appsTrackIds = set()
+        # self.appsTrackIds = set()
 
         for row in rows:
             items = row.xpath("./td")
@@ -86,18 +88,13 @@ class AppStoreSpider(BaseSpider):
 
                 appInfo = self.getAppIcon(trackid[0].text)
                 if appInfo is not None:
-                    if appInfo.trackid not in appsTrackIds:
+                    if appInfo.trackid not in self.appsTrackIds:
                         appsList.append(appInfo)
-                        appsTrackIds.add(appInfo.trackid)
+                        self.appsTrackIds.add(appInfo.trackid)
                         # print appInfo
                         self.insertToDB(appInfo)
 
             rowCount += 1
-
-        # 打印需要插入的app
-        # for i in appsList:
-        #     print i
-        # exit()
 
     def insertToDB(self, appInfo):
         _INSERT_COMMAND = 'insert into %s (trackid, name, scheme, icon60, icon512, addtime) values '%_APPSTORE_TABLE_NAME + "(%s,%s,%s,%s,%s,%s)"
@@ -107,8 +104,6 @@ class AppStoreSpider(BaseSpider):
             print "insert to database:", appInfo.name
         else:
             print "%s already in database!"%appInfo.name
-            # print appInfo
-        # exit()
 
     def getAppIcon(self, trackid):
         appInfo = None
@@ -142,6 +137,7 @@ class AppStoreSpider(BaseSpider):
         # categorys = ["news"]
 
         for category in categorys:
+            print "###start process", category
             self.cacheFileName = "annie_%s_%s.html"%(category, time.strftime("%Y_%m_%d_%H"))
 
             spiderUrl = "http://www.appannie.com/apps/ios/top/china/%s/?device=iphone"%category
