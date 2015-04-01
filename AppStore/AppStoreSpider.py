@@ -454,10 +454,13 @@ if __name__=="__main__":
     workDir = os.path.dirname(os.path.realpath(sys.argv[0]))
     os.chdir(os.path.dirname(workDir)) # 保证spider cache目录一致
 
-    logFile = CommonUtils.openLogFile(mode="w")
-
-    oldStdout = sys.stdout  
-    sys.stdout = logFile
+    logFile = None
+    oldStdout = sys.stdout
+    if "clear" in sys.argv:
+        pass
+    else:
+        logFile = CommonUtils.openLogFile(mode="w")
+        sys.stdout = logFile
 
     print "============================================"
     print "change work direcotory to workDir", workDir
@@ -474,6 +477,8 @@ if __name__=="__main__":
         # clearTask()
         # generateSchemeList()
 
-    logFile.close()  
     if oldStdout:  
         sys.stdout = oldStdout
+
+    if logFile is not None:
+        logFile.close()
