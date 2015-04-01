@@ -105,12 +105,14 @@ class AppStoreSpider(BaseSpider):
         else:
             print "%s already in database!"%appInfo.name
 
-    def getAppIcon(self, trackid):
+    def getAppIcon(self, trackid, isCn=True):
         appInfo = None
 
         try:
             # https://itunes.apple.com/lookup?id=414478124&country=cn
             url = "https://itunes.apple.com/lookup?id=%s"%trackid
+            if isCn:
+                url += "&country=cn"
             appInfoJson = json.loads(self.requestUrlContent(url, self.htmlCacheDir, "app_%s.html"%trackid))
             results = appInfoJson.get("results")
             # print len(results), results
