@@ -144,6 +144,8 @@ class AppStoreSpider(BaseSpider):
     def start(self):
         categorys = ["overall", "games", "music", "entertainment", "social-networking", "news", "utilities", "books", "business", "catalogs", "education", "finance", "food-and-drink", "health-and-fitness", "kids", "lifestyle", "medical", "navigation", "newsstand", "photo-and-video", "productivity", "reference", "sports", "travel", "weather"]
         # categorys = ["news"]
+        categorys = ["photo-and-video", "productivity", "reference", "sports", "travel", "weather"]
+        categorys = ["productivity", "travel"]
 
         for category in categorys:
             print "###start process", category
