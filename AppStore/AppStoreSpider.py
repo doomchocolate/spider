@@ -76,7 +76,14 @@ class AppStoreSpider(BaseSpider):
             items = row.xpath("./td")
             info = ""
             print rowCount
+
+            _index = 0
             for item in items:
+                _index += 1
+                if _index == 2:
+                    # 忽略掉收费app
+                    continue
+
                 # 获取title
                 titleDom = item.xpath(".//span[@class='oneline-info title-info']")
 
@@ -400,6 +407,34 @@ class AppStoreSpider(BaseSpider):
         self.mysqlCur.execute(cmd)
         self.finish()
 
+    def insertSchemeApps(self, content):
+        contents = json.loads(content)
+        for trackid in contents.keys():
+            print trackid, contents.get(trackid)
+            try:
+                schemes = ":".join(contents.get(trackid))
+                cmd = 'select count(*) from appstores where trackid="%s";'%trackid
+                self.mysqlCur.execute(cmd)
+                if self.mysqlCur.fetchone()[0] > 0:
+                    # 已经存在，更新
+                    cmd = 'update appstores set scheme="%s" where trackid="%s";'%(schemes, trackid)
+                    self.mysqlCur.execute(cmd)
+                    print "update %s scheme to %s"%(trackid, schemes)
+                else:
+                    # 不存在，获取应用名称和icon，一并插入
+                    print "insert %s scheme to %s"%(trackid, schemes)
+            except Exception, e:
+                print "Exception:", e
+            print
+
+        try:
+            self.finish()
+        except Exception, e:
+            print "Commit Exception:", e
+
+        print "commit!"
+        
+
 def main():
     host=AppStoreConstants.MYSQL_HOST
     user=AppStoreConstants.MYSQL_PASSPORT
@@ -446,6 +481,17 @@ def clearTask():
     spider = AppStoreSpider(host, user, passwd, db)
     spider.clearTask()
 
+def insertSchemeApps(filepath):
+    host=AppStoreConstants.MYSQL_HOST
+    user=AppStoreConstants.MYSQL_PASSPORT
+    passwd=AppStoreConstants.MYSQL_PASSWORD
+    db=AppStoreConstants.MYSQL_DATABASE
+
+    spider = AppStoreSpider(host, user, passwd, db)
+
+    content = open(filepath, "r").read()
+    spider.insertSchemeApps(content)
+
 if __name__=="__main__":
     reload(sys)
     sys.setdefaultencoding('utf-8')
@@ -455,10 +501,18 @@ if __name__=="__main__":
 
     logFile = None
     oldStdout = sys.stdout
-    if "clear" in sys.argv:
+    if "generate" in sys.argv:
         pass
+    elif "parse" in sys.argv:
+        pass
+    elif "clear" in sys.argv:
+        pass
+    elif "update" in sys.argv:
+        logFile = CommonUtils.openLogFile(filename="update", mode="w")
     else:
         logFile = CommonUtils.openLogFile(mode="w")
+
+    if logFile is not None:
         sys.stdout = logFile
 
     print "============================================"
@@ -471,6 +525,9 @@ if __name__=="__main__":
         paserAppList()
     elif "clear" in sys.argv:
         clearTask()
+    elif "update" in sys.argv:
+        print sys.argv
+        insertSchemeApps(sys.argv[2])
     else:
         main()
         # clearTask()
