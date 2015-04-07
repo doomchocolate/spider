@@ -348,13 +348,13 @@ class AppStoreSpider(BaseSpider):
         print "当前最大版本号:", maxVersion
 
         # 判断是否更新的scheme
-        cmd = 'select count(id) from appstores where scheme is not null and version=-1;'
+        cmd = 'select count(id) from appstores where scheme is not null and version < 0;'
         self.mysqlCur.execute(cmd)
         needUpdate = self.mysqlCur.fetchone()[0] > 0
         print "当前需要更新:", needUpdate
 
         if needUpdate:
-            cmd = 'update appstores set version=%d where scheme is not null and version=-1;'%(maxVersion+1)
+            cmd = 'update appstores set version=%d where scheme is not null and version < 0;'%(maxVersion+1)
             self.mysqlCur.execute(cmd)
             self.commit()
             print "更新新版本"
