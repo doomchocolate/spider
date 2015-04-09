@@ -118,7 +118,7 @@ class AppStoreSpider(BaseSpider):
             print "%s already in database!"%appInfo.name
             return False
 
-    def getAppIcon(self, trackid, isCn=True):
+    def getAppIcon(self, trackid, isCn=True, updateIcon=True):
         appInfo = None
 
         try:
@@ -134,14 +134,15 @@ class AppStoreSpider(BaseSpider):
                 appInfo = AppInfo()
                 appInfo.setAppInfo(results[0])
 
-                icons = self.updateIcon60to175(trackid)
-                print "icon:", appInfo.trackid, icons
-                if icons is not None:
-                    (icon60, icon512) = icons
-                    if icon60 is not None:
-                        appInfo.icon60 = icon60
-                    if icon512 is not None:
-                        appInfo.icon512 = icon512
+                if updateIcon:
+                    icons = self.updateIcon60to175(trackid)
+                    print "icon:", appInfo.trackid, icons
+                    if icons is not None:
+                        (icon60, icon512) = icons
+                        if icon60 is not None:
+                            appInfo.icon60 = icon60
+                        if icon512 is not None:
+                            appInfo.icon512 = icon512
         except Exception, e:
             print "get trackid except:", e
 
@@ -184,7 +185,7 @@ class AppStoreSpider(BaseSpider):
         result = self.mysqlCur.fetchall()
         count = 0
         for i in result:
-            appInfo = self.getAppIcon(i[0])
+            appInfo = self.getAppIcon(i[0], updateIcon=False)
 
             if appInfo is None:
                 continue
