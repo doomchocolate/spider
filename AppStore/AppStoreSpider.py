@@ -145,6 +145,12 @@ class AppStoreSpider(BaseSpider):
         except Exception, e:
             print "get trackid except:", e
 
+        if appInfo is None:
+            try:
+                os.remove(os.path.join(self.htmlCacheDir, "app_%s.html"%trackid))
+            except Exception, e:
+                pass
+
         return appInfo
 
     def start(self):
@@ -179,6 +185,9 @@ class AppStoreSpider(BaseSpider):
         count = 0
         for i in result:
             appInfo = self.getAppIcon(i[0])
+
+            if appInfo is None:
+                continue
 
             cmd = 'update %s set price=%s, bundleid="%s", trackurl="%s" where trackid=%s;'%(_APPSTORE_TABLE_NAME, str(appInfo.price), appInfo.bundleId, appInfo.trackViewUrl, appInfo.trackid)
             self.mysqlCur.execute(cmd)
