@@ -82,7 +82,8 @@ class AppStoreSpider(BaseSpider):
                 _index += 1
                 if _index == 2:
                     # 忽略掉收费app
-                    continue
+                    # continue
+                    pass
 
                 # 获取title
                 titleDom = item.xpath(".//span[@class='oneline-info title-info']")
@@ -99,18 +100,23 @@ class AppStoreSpider(BaseSpider):
                         appsList.append(appInfo)
                         self.appsTrackIds.add(appInfo.trackid)
                         # print appInfo
-                        self.insertToDB(appInfo)
+                        if self.insertToDB(appInfo):
+                            # self.finish()
+                            # exit()
+                            pass
 
             rowCount += 1
 
     def insertToDB(self, appInfo):
-        _INSERT_COMMAND = 'insert into %s (trackid, name, scheme, icon60, icon512, addtime) values '%_APPSTORE_TABLE_NAME + "(%s,%s,%s,%s,%s,%s)"
+        _INSERT_COMMAND = 'insert into %s (trackid, name, scheme, icon60, icon512, addtime, price, bundleid, trackurl) values '%_APPSTORE_TABLE_NAME + "(%s,%s,%s,%s,%s,%s,%s,%s,%s)"
 
         if not self.isInTable(_APPSTORE_TABLE_NAME, "trackid", appInfo.trackid):
             self.insert(_INSERT_COMMAND, appInfo.toTuple())
             print "insert to database:", appInfo.name
+            return True
         else:
             print "%s already in database!"%appInfo.name
+            return False
 
     def getAppIcon(self, trackid, isCn=True):
         appInfo = None
@@ -147,6 +153,9 @@ class AppStoreSpider(BaseSpider):
         categorys = ["photo-and-video", "productivity", "reference", "sports", "travel", "weather"]
         categorys = ["productivity", "travel"]
 
+        categorys = ["overall", "games", "music", "social-networking", "entertainment", "news", "utilities"]
+        categorys = ["overall"]
+
         for category in categorys:
             print "###start process", category
 
@@ -161,6 +170,23 @@ class AppStoreSpider(BaseSpider):
             except Exception, e:
                 print "***process", category, "exception", e
 
+        self.finish()
+
+    def addPriceTrackViewUrlBundleId(self):
+        cmd = 'select trackid from %s where bundleid is null;'%_APPSTORE_TABLE_NAME
+        self.mysqlCur.execute(cmd)
+        result = self.mysqlCur.fetchall()
+        count = 0
+        for i in result:
+            appInfo = self.getAppIcon(i[0])
+
+            cmd = 'update %s set price=%s, bundleid="%s", trackurl="%s" where trackid=%s;'%(_APPSTORE_TABLE_NAME, str(appInfo.price), appInfo.bundleId, appInfo.trackViewUrl, appInfo.trackid)
+            self.mysqlCur.execute(cmd)
+            count += 1
+            if count % 50 == 0:
+                self.commit()
+            print "handle:"
+            print appInfo
         self.finish()
 
     def validateData(self):
@@ -494,6 +520,15 @@ def insertSchemeApps(filepath):
     content = open(filepath, "r").read()
     spider.insertSchemeApps(content)
 
+def addPriceTrackViewUrlBundleId():
+    host=AppStoreConstants.MYSQL_HOST
+    user=AppStoreConstants.MYSQL_PASSPORT
+    passwd=AppStoreConstants.MYSQL_PASSWORD
+    db=AppStoreConstants.MYSQL_DATABASE
+
+    spider = AppStoreSpider(host, user, passwd, db)
+    spider.addPriceTrackViewUrlBundleId()
+
 if __name__=="__main__":
     reload(sys)
     sys.setdefaultencoding('utf-8')
@@ -511,6 +546,8 @@ if __name__=="__main__":
         pass
     elif "update" in sys.argv:
         logFile = CommonUtils.openLogFile(filename="update", mode="w")
+    elif "price" in sys.argv:
+        logFile = CommonUtils.openLogFile(filename="price", mode="w")
     else:
         logFile = CommonUtils.openLogFile(mode="w")
 
@@ -528,10 +565,12 @@ if __name__=="__main__":
     elif "clear" in sys.argv:
         clearTask()
     elif "update" in sys.argv:
-        print sys.argv
         insertSchemeApps(sys.argv[2])
+    elif "price" in sys.argv:
+        addPriceTrackViewUrlBundleId()
     else:
         main()
+        # addPriceTrackViewUrlBundleId()
         # clearTask()
         # generateSchemeList()
 
