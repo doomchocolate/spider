@@ -216,7 +216,8 @@ def _getAppIcon(trackid):
 
     url = "https://itunes.apple.com/cn/app/id%s?mt=8"%trackid
     cacheDir = os.path.join(_rootDir, "cache")
-    cacheDir = os.path.join(cacheDir, "itunes")
+    cacheDir = os.path.join(cacheDir, "appstores")
+    cacheDir = os.path.join(cacheDir, "html")
     
     try:
         os.makedirs(cacheDir)
