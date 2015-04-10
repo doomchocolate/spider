@@ -61,9 +61,8 @@ class WebRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         try:
             self.doAction()
-            pass
         except Exception, e:
-            raise e
+            _info("doAction Exception:"+str(e))
 
     def doAction(self):
         parsed_path = urlparse.urlparse(self.path)
@@ -141,6 +140,31 @@ def _handleAppInfo(appInfo):
         # 不在数据库中
         _info("--- New AppInfo %s ---"%trackid)
         _info("    scheme is "+schemesStr)
+
+        # 获取bundle id
+        # https://itunes.apple.com/lookup?id=414478124&country=cn
+        url = "https://itunes.apple.com/lookup?id=%s"%trackid
+        if True:
+            url += "&country=cn"
+
+        cacheDir = os.path.join(_rootDir, "cache")
+        cacheDir = os.path.join(cacheDir, "appstores")
+        cacheDir = os.path.join(cacheDir, "html")
+        
+        try:
+            os.makedirs(cacheDir)
+        except Exception, e:
+            pass
+
+        cacheFile = os.path.join(cacheDir, "app_%s.html"%trackid)
+        try:
+            appInfoJson = json.loads(_getUrlContent(url, cacheFile, jsEnable=False))
+            results = appInfoJson.get("results")
+            appInfo.setAppInfo(results[0])
+        except Exception, e:
+            _info("--- Get price exception:"+str(e)+" ---")
+            os.remove(cacheFile)
+
         _info(appInfo)
         icon60 = None
         icon512 = None
@@ -151,19 +175,23 @@ def _handleAppInfo(appInfo):
         except Exception, e:
             pass
 
-        cmd = 'insert into appstores (trackid, name, scheme, icon60, icon512, addtime, version) values ' + '("%s","%s","%s","%s","%s","%s",-2)'%(trackid, appInfo.name, schemesStr, icon60, icon512, time.strftime("%Y_%m_%d_%H"))
+        cmd = 'insert into appstores (trackid, name, scheme, icon60, icon512, addtime, version, price, bundleid, trackurl) values ' + '("%s","%s","%s","%s","%s","%s",-2,"%s","%s","%s")'%(trackid, appInfo.name, schemesStr, icon60, icon512, time.strftime("%Y_%m_%d_%H"), str(appInfo.price), appInfo.bundleId, appInfo.trackViewUrl)
         _mysqlCur.execute(cmd)
         _mysqlConn.commit()
         _info("--- New AppInfo %s Finish ---"%trackid)
     #"""
 
-def _getUrlContent(url, cacheFile):
+def _getUrlContent(url, cacheFile, jsEnable=True):
     target_path = cacheFile
 
-    if not os.path.isfile(target_path) or True:
-        load_web_page_js_dir = os.path.realpath(os.path.join(_rootDir, "bin"))
-        load_web_page_js = os.path.realpath(os.path.join(load_web_page_js_dir, "loadAnnie.js"))
-        command = 'phantomjs --load-images=false "%s" "%s" "%s"'%(load_web_page_js, url, target_path)
+    if not os.path.isfile(target_path):
+        if not jsEnable:
+            wget = 'wget --user-agent="Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)"'
+            command = wget + ' "%s" -O %s --timeout=60 --tries=2'%(url, target_path)
+        else:
+            load_web_page_js_dir = os.path.realpath(os.path.join(_rootDir, "bin"))
+            load_web_page_js = os.path.realpath(os.path.join(load_web_page_js_dir, "loadAnnie.js"))
+            command = 'phantomjs --load-images=false "%s" "%s" "%s"'%(load_web_page_js, url, target_path)
         _info(command)
 
         out = "1output.txt"
@@ -171,24 +199,12 @@ def _getUrlContent(url, cacheFile):
         errfp = open("1error.txt", "a+")
         try:
             p = subprocess.Popen(command, shell=True, stdout=outfp, stderr=errfp)
-            # fp = open("geturl.txt", "w")
-            # fp.write("##### start #####\n")
-
-            # while p.poll() == None:
-            #     line = p.stdout.readline()
-            #     line += p.stderr.readline()
-            #     if len(line) > 0:
-            #         fp.write(line)
+            
             state = p.wait()
-            # line = p.stdout.read()
-            # line += p.stderr.read()
-            # fp.write(line)
-            # fp.write("\n##### end #####\n")
+            
             _info("Load Annie page state:%d"%state)
         except Exception, e:
             _info("subprocess exception:"+str(e))
-
-        # state = os.system(command.encode("utf-8"))
 
     return open(target_path).read()
 
@@ -238,7 +254,11 @@ def commit(content):
     for trackid in trackids:
         schemes = appInfos.get(trackid).get("schemes", None)
         name = appInfos.get(trackid).get("name", None)
-        appInfo = _AppInfo(trackid, name, schemes)
+        price = appInfos.get(trackid).get("price", 0)
+        bundleId = appInfos.get(trackid).get("bundleId", None)
+        trackViewUrl = appInfos.get(trackid).get("trackViewUrl", None)
+
+        appInfo = _AppInfo(trackid, name, schemes, price, bundleId, trackViewUrl)
 
         _handleAppInfo(appInfo)
 
@@ -247,17 +267,29 @@ def commit(content):
     # _mysqlConn.close()
 
 class _AppInfo():
-    def __init__(self, trackid, name, schemes):
+    def __init__(self, trackid, name, schemes, price, bundleId, trackViewUrl):
         self.trackid = trackid
         self.name = name
         # schemes is a list
         self.schemes = schemes
+
+        self.price = price
+        self.bundleId = bundleId
+        self.trackViewUrl = trackViewUrl
+
+    def setAppInfo(self, info):
+        self.price = info.get("price", "0")
+        self.bundleId = info.get("bundleId", None)
+        self.trackViewUrl = info.get("trackViewUrl", None)
 
     def __str__(self):
         result = ["AppInfo:"]
         result.append("%9s: %s"%("trackid", self.trackid))
         result.append("%9s: %s"%("name", self.name))
         result.append("%9s: %s"%("schemes", self.schemes))
+        result.append("%9s: %s"%("price", self.price))
+        result.append("%9s: %s"%("bundleId", self.bundleId))
+        result.append("%9s: %s"%("trackViewUrl", self.trackViewUrl))
 
         return "\n".join(result)
 
