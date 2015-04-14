@@ -119,8 +119,6 @@ def initMysql():
     _mysqlCur = _mysqlConn.cursor()
     # 初始化数据库 结束
 
-    print help(_mysqlConn.ping)
-
 def deinitMysql():
     global _mysqlCur, _mysqlConn
 
@@ -330,12 +328,8 @@ class _AppInfo():
         return "\n".join(result)
 
 def main(port=9156):
-    # server = BaseHTTPServer.HTTPServer(('127.0.0.1', 9156), WebRequestHandler)  
-    # server.serve_forever()  
-
-    initMysql()
-    print dir(_mysqlConn)
-    print dir(_mysqlCur)
+    server = BaseHTTPServer.HTTPServer(('127.0.0.1', 9156), WebRequestHandler)  
+    server.serve_forever()  
 
 _rootDir = "."
 
