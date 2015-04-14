@@ -59,10 +59,15 @@ class WebRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         # _info(message_parts)
         self.wfile.write(message)
 
+        # 初始化数据库连接
+        initMysql()
+
         try:
             self.doAction()
         except Exception, e:
             _info("doAction Exception:"+str(e))
+
+        # deinitMysql()
 
     def doAction(self):
         parsed_path = urlparse.urlparse(self.path)
@@ -85,6 +90,18 @@ _mysqlConn = None
 _mysqlCur = None
 def initMysql():
     global _mysqlCur, _mysqlConn
+
+    if _mysqlConn is not None:
+        _mysqlConn.ping()
+
+        if _mysqlCur is not None:
+            try:
+                _mysqlCur.close()
+            except Exception, e:
+                pass
+        _mysqlCur = _mysqlConn.cursor()
+        return
+
     # 初始化数据库 开始
     MYSQL_HOST     = "jiangerji.mysql.rds.aliyuncs.com"
     MYSQL_PASSPORT = "jiangerji"
@@ -101,6 +118,24 @@ def initMysql():
     _info("Connect to %s:%s"%(MYSQL_HOST, MYSQL_DATABASE))
     _mysqlCur = _mysqlConn.cursor()
     # 初始化数据库 结束
+
+    print help(_mysqlConn.ping)
+
+def deinitMysql():
+    global _mysqlCur, _mysqlConn
+
+    if _mysqlConn != None:
+            _mysqlConn.commit()
+
+    if _mysqlCur != None:
+        _mysqlCur.close()
+
+    if _mysqlConn != None:
+        _mysqlConn.close()
+
+    _mysqlCur = None
+    _mysqlConn = None
+
 
 # 处理app
 def _handleAppInfo(appInfo):
@@ -295,8 +330,12 @@ class _AppInfo():
         return "\n".join(result)
 
 def main(port=9156):
-    server = BaseHTTPServer.HTTPServer(('127.0.0.1', 9156), WebRequestHandler)  
-    server.serve_forever()  
+    # server = BaseHTTPServer.HTTPServer(('127.0.0.1', 9156), WebRequestHandler)  
+    # server.serve_forever()  
+
+    initMysql()
+    print dir(_mysqlConn)
+    print dir(_mysqlCur)
 
 _rootDir = "."
 
@@ -309,9 +348,6 @@ if __name__ == "__main__":
     os.chdir(_rootDir) # 保证spider cache目录一致
 
     _logger = logutil.getLogger("CommitServer")
-
-    # 初始化数据库连接
-    initMysql()
 
     port = 9156
     if len(sys.argv) > 1:
