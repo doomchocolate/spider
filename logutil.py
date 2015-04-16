@@ -12,6 +12,8 @@ def getLogger(loggerName, level=logging.DEBUG):
     _logPath = os.path.join(".", "log")
     if not os.path.isdir(_logPath):
         os.makedirs(_logPath)
+
+    loggerName += time.strftime("_%Y_%m_%d")
         
     if _loggerMap.has_key(loggerName):
         return _loggerMap.get(loggerName)

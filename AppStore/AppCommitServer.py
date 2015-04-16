@@ -15,15 +15,13 @@ import MySQLdb
 
 import logutil
 
-_logger = None
-
 def _info(message):
-    if _logger:
-        _logger.info(message)
+    _logger = logutil.getLogger("CommitServer")
+    _logger.info(message)
 
 def _debug(message):
-    if _logger:
-        _logger.debug(message)
+    _logger = logutil.getLogger("CommitServer")
+    _logger.debug(message)
   
 class WebRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):  
     def do_GET(self):  
@@ -199,8 +197,8 @@ def _handleAppInfo(appInfo):
             os.remove(cacheFile)
 
         _info(appInfo)
-        icon60 = None
-        icon512 = None
+        icon60 = appInfo.icon60
+        icon512 = appInfo.icon512
         try:
             icons = _getAppIcon(trackid)
             if icons is not None:
@@ -270,7 +268,7 @@ def _getAppIcon(trackid):
 
             return (icon60, icon512)
     except Exception, e:
-        print "get url content exception:", e
+        _info("get url content exception:"+str(e))
 
     try:
         os.remove(cacheFile)
@@ -311,10 +309,15 @@ class _AppInfo():
         self.bundleId = bundleId
         self.trackViewUrl = trackViewUrl
 
+        self.icon60 = None
+        self.icon512 = None
+
     def setAppInfo(self, info):
         self.price = info.get("price", "0")
         self.bundleId = info.get("bundleId", None)
         self.trackViewUrl = info.get("trackViewUrl", None)
+        self.icon60 = info.get("artworkUrl60", None)
+        self.icon512 = info.get("artworkUrl512", None)
 
     def __str__(self):
         result = ["AppInfo:"]
@@ -324,6 +327,8 @@ class _AppInfo():
         result.append("%9s: %s"%("price", self.price))
         result.append("%9s: %s"%("bundleId", self.bundleId))
         result.append("%9s: %s"%("trackViewUrl", self.trackViewUrl))
+        result.append("%9s: %s"%("icon60", self.icon60))
+        result.append("%9s: %s"%("icon512", self.icon512))
 
         return "\n".join(result)
 
@@ -340,8 +345,6 @@ if __name__ == "__main__":
     _rootDir = os.path.dirname(os.path.realpath(sys.argv[0]))
     _rootDir = os.path.dirname(_rootDir)
     os.chdir(_rootDir) # 保证spider cache目录一致
-
-    _logger = logutil.getLogger("CommitServer")
 
     port = 9156
     if len(sys.argv) > 1:
