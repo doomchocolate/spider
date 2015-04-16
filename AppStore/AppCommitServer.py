@@ -354,4 +354,5 @@ if __name__ == "__main__":
             pass
 
     _info("=== Start server at 127.0.0.1:%d"%port)
+    _info(str(os.environ))
     main(port)
