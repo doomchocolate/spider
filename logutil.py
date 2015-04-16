@@ -13,8 +13,9 @@ def getLogger(loggerName, level=logging.DEBUG):
     if not os.path.isdir(_logPath):
         os.makedirs(_logPath)
 
-    if _loggerMap.has_key(loggerName+time.strftime("_%Y_%m_%d")):
-        return _loggerMap.get(loggerName)
+    key = loggerName+time.strftime("_%Y_%m_%d")
+    if _loggerMap.has_key(key):
+        return _loggerMap.get(key)
     else:
         logFile = os.path.join(_logPath, 'iam007_%s_%s.log'%(loggerName, time.strftime("%Y_%m_%d")))
         print "logFile:", logFile
@@ -28,7 +29,7 @@ def getLogger(loggerName, level=logging.DEBUG):
         logger.addHandler(handler)
         logger.setLevel(level)
 
-        _loggerMap[loggerName] = logger
+        _loggerMap[key] = logger
         return logger
 
 if __name__ == "__main__":
