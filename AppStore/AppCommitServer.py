@@ -78,11 +78,15 @@ class WebRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 key, value = query.split("=")
                 if key.lower() == "file":
                     filepath = urllib.unquote(value)
-                    _info("=== Commit with file %s ==="%filepath)
+                    _info("=== Commit with file %s begin ==="%filepath)
 
                     fp = open(filepath, "r")
                     commit(fp.read())
                     fp.close()
+
+                    _info("=== Commit with file %s end ==="%filepath)
+                    break
+
 
 _mysqlConn = None
 _mysqlCur = None
