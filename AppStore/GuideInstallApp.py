@@ -1,5 +1,5 @@
 #encoding=utf-8
-from __future__ import unicode_literals
+# from __future__ import unicode_literals
 import __init__ # 主要为了在没有加入到环境变量时，可以引用父目录的文件
 import sys
 import time
@@ -9,7 +9,6 @@ import os
 # 第三方依赖库
 import MySQLdb
 import logutil
-import MyEncrypt
 
 _guideAppList = [
     (444934666, "QQ"),
@@ -61,7 +60,32 @@ def init():
     mysqlConn.close()
     _info("=== Finish! ===")
 
+from ctypes import *
+_libEnc = None
+def enc(input):
+    global _libEnc
+    if _libEnc is None:
+        soPath = os.path.join(os.getcwd(), 'myencrypt.so')
+        _libEnc = cdll.LoadLibrary(soPath)
+
+    if input is None or len(input) == 0:
+        return ""
+    inputLength = len(input)
+
+    _libEnc._encrypt.restype = c_char_p  
+
+    encResult = _libEnc._encrypt(create_string_buffer(input), inputLength)
+
+    return encResult
+
+def testEnc():
+    a = "ed2k"
+    print enc(a)
+    # exit()
+
 def main(filepath=None, indent=False):
+    # testEnc()
+
     mysqlConn = None
     mysqlCur  = None
 
@@ -75,8 +99,6 @@ def main(filepath=None, indent=False):
         _info("Mysql Error %d: %s" % (e.args[0], e.args[1]))
         return
 
-    
-
     cmd = 'select a.* from appstores a join guideinstallapp b on a.trackid = b.trackid;'
     
     mysqlCur.execute(cmd)
@@ -86,7 +108,18 @@ def main(filepath=None, indent=False):
     for i in result:
         app = {}
         app["name"] = i[2]
-        app["scheme"] = MyEncrypt.encrypt(i[3])
+        _info("scheme is "+i[3])
+        a = i[3]
+        _info(type(a))
+        a = i[3].encode("utf-8")
+        # a = "teiron2273"
+        # a = ""
+        # for j in i[3]:
+        #     a += j
+
+        _info(type(a))
+        _info("j:"+a)
+        app["scheme"] = enc(a)#enc(i[3])
         app["icon60"] = i[4]
         app["icon512"] = i[5]
         jsonResult[i[1]] = app
