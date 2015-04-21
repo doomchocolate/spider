@@ -441,6 +441,8 @@ class AppStoreSpider(BaseSpider):
                 
                 # 将scheme进行加密
                 scheme = MyEncrypt.encrypt(scheme)
+                print "scheme is", scheme
+                print "scheme encode is", scheme
                 schemeList[scheme] = appInfo.toDict()
 
         # schemeList["schemeJsonVersion"] = maxVersion
@@ -558,7 +560,7 @@ if __name__=="__main__":
     logFile = None
     oldStdout = sys.stdout
     if "generate" in sys.argv:
-        pass
+        logFile = CommonUtils.openLogFile(filename="generate", mode="w")
     elif "parse" in sys.argv:
         pass
     elif "clear" in sys.argv:
