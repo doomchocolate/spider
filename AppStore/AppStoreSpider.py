@@ -16,8 +16,6 @@ from Base.BaseSpider import BaseSpider
 import AppStoreConstants
 from AppClass import AppInfo
 
-import MyEncrypt
-
 """
 获取前100（500）的应用
 http://www.appannie.com/apps/ios/top/china/overall/?device=iphone
@@ -551,6 +549,8 @@ if __name__=="__main__":
 
     workDir = os.path.dirname(os.path.realpath(sys.argv[0]))
     os.chdir(os.path.dirname(workDir)) # 保证spider cache目录一致
+
+    import MyEncrypt
 
     logFile = None
     oldStdout = sys.stdout
