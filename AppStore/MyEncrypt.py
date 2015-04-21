@@ -78,14 +78,14 @@ class _my_string(Structure):
                ('text', c_char_p)]  
 
 def encrypt(input):
-    return input
+    # return input
     if input is None or len(input) == 0:
         return ""
     inputLength = len(input)
 
     libEnc._encrypt.restype = c_char_p  
 
-    encResult = libEnc._encrypt(input, inputLength)
+    encResult = libEnc._encrypt(create_string_buffer(input), inputLength)
 
     # print "text", encResult.contents.text
     return encResult
