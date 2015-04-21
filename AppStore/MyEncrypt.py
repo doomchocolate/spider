@@ -78,6 +78,7 @@ class _my_string(Structure):
                ('text', c_char_p)]  
 
 def encrypt(input):
+    return input
     if input is None or len(input) == 0:
         return ""
     inputLength = len(input)
