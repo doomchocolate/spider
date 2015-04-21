@@ -1,4 +1,6 @@
 #encoding=utf-8
+from __future__ import unicode_literals
+import __init__ # 主要为了在没有加入到环境变量时，可以引用父目录的文件
 from ctypes import *
 import os
 import sys
@@ -6,9 +8,6 @@ import platform
 import time
 
 # import MySQLdb
-
-reload(sys)
-sys.setdefaultencoding('utf-8')
 
 if platform.system() != 'Windows' or True:
     soPath = os.path.join(os.getcwd(), 'myencrypt.so')
@@ -163,6 +162,9 @@ def test():
     # testDec()
 
 def main():
+    reload(sys)
+    sys.setdefaultencoding('utf-8')
+
     initMysql()
 
     cmd = 'select scheme from appstores where scheme is not null;'
