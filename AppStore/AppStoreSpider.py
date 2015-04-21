@@ -438,6 +438,9 @@ class AppStoreSpider(BaseSpider):
             for scheme in schemes:
                 if len(scheme.strip()) == 0:
                     continue
+                
+                # 将scheme进行加密
+                scheme = MyEncrypt.encrypt(scheme)
                 schemeList[scheme] = appInfo.toDict()
 
         # schemeList["schemeJsonVersion"] = maxVersion
