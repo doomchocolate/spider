@@ -9,6 +9,7 @@ import os
 # 第三方依赖库
 import MySQLdb
 import logutil
+import MyEncrypt
 
 _guideAppList = [
     (444934666, "QQ"),
@@ -74,6 +75,8 @@ def main(filepath=None, indent=False):
         _info("Mysql Error %d: %s" % (e.args[0], e.args[1]))
         return
 
+    
+
     cmd = 'select a.* from appstores a join guideinstallapp b on a.trackid = b.trackid;'
     
     mysqlCur.execute(cmd)
@@ -83,7 +86,7 @@ def main(filepath=None, indent=False):
     for i in result:
         app = {}
         app["name"] = i[2]
-        app["scheme"] = i[3]
+        app["scheme"] = MyEncrypt.encrypt(i[3])
         app["icon60"] = i[4]
         app["icon512"] = i[5]
         jsonResult[i[1]] = app
