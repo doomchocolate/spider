@@ -440,9 +440,10 @@ class AppStoreSpider(BaseSpider):
                     continue
                 
                 # 将scheme进行加密
+                print "scheme is", trackid ,scheme
                 scheme = MyEncrypt.encrypt(scheme)
-                print "scheme is", scheme
                 print "scheme encode is", scheme
+                print "scheme length is", len(scheme)
                 schemeList[scheme] = appInfo.toDict()
 
         # schemeList["schemeJsonVersion"] = maxVersion
