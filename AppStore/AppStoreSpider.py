@@ -16,6 +16,8 @@ from Base.BaseSpider import BaseSpider
 import AppStoreConstants
 from AppClass import AppInfo
 
+import MyEncrypt
+
 """
 获取前100（500）的应用
 http://www.appannie.com/apps/ios/top/china/overall/?device=iphone
@@ -414,6 +416,10 @@ class AppStoreSpider(BaseSpider):
                     for scheme in schemes:
                         if len(scheme.strip()) == 0:
                             continue
+
+                        # 将scheme进行加密
+                        scheme = MyEncrypt.encrypt(scheme)
+
                         schemeList[scheme] = appInfo.toDict()
 
                 content = json.dumps(schemeList, indent=4)
