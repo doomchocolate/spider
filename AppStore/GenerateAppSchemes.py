@@ -75,13 +75,12 @@ def _generate(mysqlConn, mysqlCur, indent=False):
                 appInfo = AppInfo()
                 appInfo.trackid = info[1]
                 appInfo.name = info[2]
-                appInfo.scheme = info[3]
+                appInfo.scheme = _encrypt(info[3])
                 appInfo.icon60 = info[4]
                 appInfo.icon512 = info[5]
                 
                 schemes = appInfo.scheme
-                _info("schemes is %s"%schemes)
-                schemes = _encrypt(schemes)
+                _info("schemes is %s"%info[3])
                 _info("schemes encode is %s"%schemes)
                 _info("schemes length is %d"%len(schemes))
                 schemeList[appInfo.trackid] = appInfo.toDict()
@@ -103,13 +102,12 @@ def _generate(mysqlConn, mysqlCur, indent=False):
         appInfo = AppInfo()
         appInfo.trackid = info[1]
         appInfo.name = info[2]
-        appInfo.scheme = info[3]
+        appInfo.scheme = _encrypt(info[3])
         appInfo.icon60 = info[4]
         appInfo.icon512 = info[5]
 
         schemes = appInfo.scheme
-        _info("schemes is %s"%schemes)
-        schemes = _encrypt(schemes)
+        _info("schemes is %s"%info[3])
         _info("schemes encode is %s"%schemes)
         _info("schemes length is %d"%len(schemes))
         schemeList[appInfo.trackid] = appInfo.toDict()
