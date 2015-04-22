@@ -136,6 +136,9 @@ if __name__=="__main__":
     reload(sys)
     sys.setdefaultencoding('utf-8')
 
+    workDir = os.path.dirname(os.path.realpath(sys.argv[0]))
+    os.chdir(workDir)
+
     """
     python GuideInstallApp.py targetPath -f
 
