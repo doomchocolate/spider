@@ -109,16 +109,7 @@ def main(filepath=None, indent=False):
         app = {}
         app["name"] = i[2]
         _info("scheme is "+i[3])
-        a = i[3]
-        _info(type(a))
         a = i[3].encode("utf-8")
-        # a = "teiron2273"
-        # a = ""
-        # for j in i[3]:
-        #     a += j
-
-        _info(type(a))
-        _info("j:"+a)
         app["scheme"] = enc(a)#enc(i[3])
         app["icon60"] = i[4]
         app["icon512"] = i[5]
