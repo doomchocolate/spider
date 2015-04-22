@@ -30,7 +30,8 @@ class AppInfo:
 
     def toDict(self):
         result = {}
-        result["id"] = self.trackid
+        # result["id"] = self.trackid
+        result["schemes"] = self.scheme
         result["name"] = self.name
         result["icon60"] = self.icon60
         result["icon512"] = self.icon512

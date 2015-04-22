@@ -35,6 +35,7 @@ def enc(input):
     return encResult
 
 def _encrypt(input):
+    # return input
     return enc(input)
 
 def _generate(mysqlConn, mysqlCur, indent=False):
@@ -63,11 +64,6 @@ def _generate(mysqlConn, mysqlCur, indent=False):
         _info("创建scheme目录")
         os.makedirs(targetFolder)
 
-    # 是否优化输出
-    spaceIndent = 0
-    if indent:
-        spaceIndent = 4
-
     # 生成scheme json数据
     for i in range(1, maxVersion+1):
         for j in range(i+1, maxVersion+1):
@@ -79,19 +75,22 @@ def _generate(mysqlConn, mysqlCur, indent=False):
                 appInfo = AppInfo()
                 appInfo.trackid = info[1]
                 appInfo.name = info[2]
-                schemes = info[3].split(":")
+                appInfo.scheme = info[3]
                 appInfo.icon60 = info[4]
                 appInfo.icon512 = info[5]
-                for scheme in schemes:
-                    if len(scheme.strip()) == 0:
-                        continue
+                
+                schemes = appInfo.scheme
+                _info("schemes is %s"%schemes)
+                schemes = _encrypt(schemes)
+                _info("schemes encode is %s"%schemes)
+                _info("schemes length is %d"%len(schemes))
+                schemeList[appInfo.trackid] = appInfo.toDict()
 
-                    # 将scheme进行加密
-                    scheme = _encrypt(scheme)
-
-                    schemeList[scheme] = appInfo.toDict()
-
-            content = json.dumps(schemeList, indent=spaceIndent)
+            content = ""
+            if indent:
+                content = json.dumps(schemeList, indent=4)
+            else:
+                content = json.dumps(schemeList)
             targetPath = os.path.join(targetFolder, "extSchemeApps_%d_%d.json"%(j, i))
             open(targetPath, "w").write(content)
 
@@ -104,22 +103,22 @@ def _generate(mysqlConn, mysqlCur, indent=False):
         appInfo = AppInfo()
         appInfo.trackid = info[1]
         appInfo.name = info[2]
-        schemes = info[3].split(":")
+        appInfo.scheme = info[3]
         appInfo.icon60 = info[4]
         appInfo.icon512 = info[5]
-        for scheme in schemes:
-            if len(scheme.strip()) == 0:
-                continue
-            
-            # 将scheme进行加密
-            # print "scheme is", appInfo.trackid ,scheme
-            _info("scheme is %s"%scheme)
-            scheme = _encrypt(scheme)
-            _info("scheme encode is %s"%scheme)
-            _info("scheme length is %d"%len(scheme))
-            schemeList[scheme] = appInfo.toDict()
 
-    content = json.dumps(schemeList, indent=spaceIndent)
+        schemes = appInfo.scheme
+        _info("schemes is %s"%schemes)
+        schemes = _encrypt(schemes)
+        _info("schemes encode is %s"%schemes)
+        _info("schemes length is %d"%len(schemes))
+        schemeList[appInfo.trackid] = appInfo.toDict()
+
+    content = ""
+    if indent:
+        content = json.dumps(schemeList, indent=4)
+    else:
+        content = json.dumps(schemeList)
     targetPath = os.path.join(targetFolder, "extSchemeApps.json")
     open(targetPath, "w").write(content)
 
