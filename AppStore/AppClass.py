@@ -11,6 +11,7 @@ class AppInfo:
         self.price = 0
         self.bundleId = None
         self.trackViewUrl = None
+        self.ipadOnly = False
 
     def __str__(self):
         log = "AppInfo:\n"
@@ -22,6 +23,7 @@ class AppInfo:
         log += "    %8s: %s\n"%("price", self.price)
         log += "    %8s: %s\n"%("bundleId", self.bundleId)
         log += "    %8s: %s\n"%("trackViewUrl", self.trackViewUrl)
+        log += "    %8s: %s\n"%("ipadOnly", self.ipadOnly)
         # log += "    %8s: %s\n"%("desc", self.desc)
         return log
 
@@ -47,3 +49,9 @@ class AppInfo:
         self.price = appInfo.get("price")
         self.bundleId = appInfo.get("bundleId")
         self.trackViewUrl = appInfo.get("trackViewUrl")
+
+        self.ipadOnly = True
+        supportedDevices = appInfo.get("supportedDevices")
+        for i in supportedDevices:
+            if "iphone" in i.lower():
+                self.ipadOnly = False
