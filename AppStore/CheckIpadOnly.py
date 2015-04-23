@@ -45,6 +45,7 @@ def main(filepath=None, indent=False):
     results = mysqlCur.fetchall()
 
     updateFormat = 'update appstores set ipadonly=%d where trackid=%s;'
+    count = 0
     for app in results:
         try:
             trackid = app[0]
@@ -58,6 +59,10 @@ def main(filepath=None, indent=False):
             mysqlCur.execute(cmd)
         except Exception, e:
             print "Exception:", trackid, str(e)
+        
+        count += 1
+        if count%50 == 0:
+            mysqlConn.commit()
 
     mysqlConn.commit()
     mysqlCur.close()
