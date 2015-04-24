@@ -67,7 +67,7 @@ def _generate(mysqlConn, mysqlCur, indent=False):
     # 生成scheme json数据
     for i in range(1, maxVersion+1):
         for j in range(i+1, maxVersion+1):
-            cmd = 'select * from appstores where version > %d and version <=%d and scheme is not null;'%(i, j)
+            cmd = 'select * from appstores where ipadonly=0 and  version > %d and version <=%d and scheme is not null;'%(i, j)
             mysqlCur.execute(cmd)
             results = mysqlCur.fetchall()
             schemeList = {}
@@ -94,7 +94,7 @@ def _generate(mysqlConn, mysqlCur, indent=False):
             open(targetPath, "w").write(content)
 
     # 生成最新所有的scheme json数据
-    queryCmd = "select * from appstores where scheme != '';"
+    queryCmd = "select * from appstores where ipadonly=0 and scheme != '';"
     mysqlCur.execute(queryCmd)
     results = mysqlCur.fetchall()
     schemeList = {}
