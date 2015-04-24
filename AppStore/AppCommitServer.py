@@ -324,6 +324,7 @@ class _AppInfo():
 
         self.icon60 = None
         self.icon512 = None
+        self.ipadOnly = False
 
     def setAppInfo(self, info):
         self.price = info.get("price", "0")
@@ -331,6 +332,12 @@ class _AppInfo():
         self.trackViewUrl = info.get("trackViewUrl", None)
         self.icon60 = info.get("artworkUrl60", None)
         self.icon512 = info.get("artworkUrl512", None)
+
+        self.ipadOnly = True
+        supportedDevices = info.get("supportedDevices")
+        for i in supportedDevices:
+            if "iphone" in i.lower():
+                self.ipadOnly = False
 
     def __str__(self):
         result = ["AppInfo:"]
