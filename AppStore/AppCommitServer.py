@@ -103,15 +103,19 @@ def initMysql():
     global _mysqlCur, _mysqlConn
 
     if _mysqlConn is not None:
-        _mysqlConn.ping()
+        try:
+            _mysqlConn.ping()
+            # mysql connection is ok.
+            return
+        except MySQLdb.OperationalError, e:
+            _mysqlCur = None
+            _mysqlConn = None
 
-        if _mysqlCur is not None:
-            try:
-                _mysqlCur.close()
-            except Exception, e:
+            exceptionCode = e.args[1]
+            if exceptionCode == 2006:
+                _info("Reconnect to mysql.")    
+            else:
                 pass
-        _mysqlCur = _mysqlConn.cursor()
-        return
 
     # 初始化数据库 开始
     MYSQL_HOST     = "jiangerji.mysql.rds.aliyuncs.com"
