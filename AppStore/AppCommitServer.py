@@ -22,6 +22,8 @@ def _info(message):
 def _debug(message):
     _logger = logutil.getLogger("CommitServer")
     _logger.debug(message)
+
+_commit_file_cache_dir = None
   
 class WebRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):  
     def do_GET(self):  
@@ -57,9 +59,6 @@ class WebRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         # _info(message_parts)
         self.wfile.write(message)
 
-        # 初始化数据库连接
-        initMysql()
-
         try:
             self.doAction()
         except Exception, e:
@@ -68,6 +67,8 @@ class WebRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         # deinitMysql()
 
     def doAction(self):
+        global _commit_file_cache_dir
+
         parsed_path = urlparse.urlparse(self.path)
         action = parsed_path.path
 
@@ -80,11 +81,19 @@ class WebRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     filepath = urllib.unquote(value)
                     _info("=== Commit with file %s begin ==="%filepath)
 
-                    fp = open(filepath, "r")
+                    # 初始化数据库连接
+                    initMysql()
+
+                    filename = "%s_%s"%(time.strftime("%Y_%m_%d_%H_%M_%S"), os.path.basename(filepath))
+                    targetCachePath = os.path.join(_commit_file_cache_dir, filename)
+                    os.rename(filepath, targetCachePath)
+                    _info("=== Remove to %s ===="%targetCachePath)
+
+                    fp = open(targetCachePath, "r")
                     commit(fp.read())
                     fp.close()
 
-                    _info("=== Commit with file %s end ==="%filepath)
+                    _info("=== Commit with file %s end ==="%targetCachePath)
                     break
 
 
@@ -210,7 +219,7 @@ def _handleAppInfo(appInfo):
         except Exception, e:
             pass
 
-        cmd = 'insert into appstores (trackid, name, scheme, icon60, icon512, addtime, version, price, bundleid, trackurl) values ' + '("%s","%s","%s","%s","%s","%s",-2,"%s","%s","%s")'%(trackid, appInfo.name, schemesStr, icon60, icon512, time.strftime("%Y_%m_%d_%H"), str(appInfo.price), appInfo.bundleId, appInfo.trackViewUrl)
+        cmd = 'insert into appstores (trackid, name, scheme, icon60, icon512, addtime, version, price, bundleid, trackurl, ipadonly) values ' + '("%s","%s","%s","%s","%s","%s",-2,"%s","%s","%s", %d)'%(trackid, appInfo.name, schemesStr, icon60, icon512, time.strftime("%Y_%m_%d_%H"), str(appInfo.price), appInfo.bundleId, appInfo.trackViewUrl, appInfo.ipadOnly : 1 ? 0)
         _mysqlCur.execute(cmd)
         _mysqlConn.commit()
         _info("--- New AppInfo %s Finish ---"%trackid)
@@ -284,7 +293,7 @@ def _getAppIcon(trackid):
 
 def commit(content):
     appInfos = json.loads(content)
-    _info(content)
+    # _info(content)
 
     trackids = appInfos.keys()
     for trackid in trackids:
@@ -349,6 +358,14 @@ if __name__ == "__main__":
     _rootDir = os.path.dirname(os.path.realpath(sys.argv[0]))
     _rootDir = os.path.dirname(_rootDir)
     os.chdir(_rootDir) # 保证spider cache目录一致
+
+    _commit_file_cache_dir = os.path.join(".", "AppStore")
+    _commit_file_cache_dir = os.path.join(_commit_file_cache_dir, "scheme")
+    _commit_file_cache_dir = os.path.join(_commit_file_cache_dir, "commit")
+    try:
+        os.makedirs(_commit_file_cache_dir)
+    except Exception, e:
+        pass
 
     port = 9156
     if len(sys.argv) > 1:
