@@ -219,7 +219,7 @@ def _handleAppInfo(appInfo):
         except Exception, e:
             pass
 
-        cmd = 'insert into appstores (trackid, name, scheme, icon60, icon512, addtime, version, price, bundleid, trackurl, ipadonly) values ' + '("%s","%s","%s","%s","%s","%s",-2,"%s","%s","%s", %d)'%(trackid, appInfo.name, schemesStr, icon60, icon512, time.strftime("%Y_%m_%d_%H"), str(appInfo.price), appInfo.bundleId, appInfo.trackViewUrl, appInfo.ipadOnly : 1 ? 0)
+        cmd = 'insert into appstores (trackid, name, scheme, icon60, icon512, addtime, version, price, bundleid, trackurl, ipadonly) values ' + '("%s","%s","%s","%s","%s","%s",-2,"%s","%s","%s", %d)'%(trackid, appInfo.name, schemesStr, icon60, icon512, time.strftime("%Y_%m_%d_%H"), str(appInfo.price), appInfo.bundleId, appInfo.trackViewUrl, 1 if appInfo.ipadOnly else 0)
         _mysqlCur.execute(cmd)
         _mysqlConn.commit()
         _info("--- New AppInfo %s Finish ---"%trackid)
