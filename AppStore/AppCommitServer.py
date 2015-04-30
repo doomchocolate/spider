@@ -371,7 +371,7 @@ if __name__ == "__main__":
     os.chdir(_rootDir) # 保证spider cache目录一致
 
     _commit_file_cache_dir = os.path.join(".", "AppStore")
-    _commit_file_cache_dir = os.path.join(_commit_file_cache_dir, "scheme")
+    # _commit_file_cache_dir = os.path.join(_commit_file_cache_dir, "scheme")
     _commit_file_cache_dir = os.path.join(_commit_file_cache_dir, "commit")
     try:
         os.makedirs(_commit_file_cache_dir)
