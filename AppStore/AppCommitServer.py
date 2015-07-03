@@ -10,6 +10,7 @@ import subprocess
 import BaseHTTPServer  
 import urlparse
 import urllib
+import shutil
 
 import MySQLdb
 
@@ -86,8 +87,10 @@ class WebRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
                     filename = "%s_%s"%(time.strftime("%Y_%m_%d_%H_%M_%S"), os.path.basename(filepath))
                     targetCachePath = os.path.join(_commit_file_cache_dir, filename)
-                    os.rename(filepath, targetCachePath)
-                    _info("=== Remove to %s ===="%targetCachePath)
+                    _info("=== Copy %s to %s ===="%(filepath, targetCachePath))
+                    # os.rename(filepath, targetCachePath)
+                    shutil.copy(filepath, targetCachePath)
+                    _info("=== Copy to %s ===="%targetCachePath)
 
                     fp = open(targetCachePath, "r")
                     commit(fp.read())
