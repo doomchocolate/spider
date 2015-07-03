@@ -80,9 +80,9 @@ def _generate(mysqlConn, mysqlCur, indent=False):
                 appInfo.icon512 = info[5]
                 
                 schemes = appInfo.scheme
-                _info("schemes is %s"%info[3])
-                _info("schemes encode is %s"%schemes)
-                _info("schemes length is %d"%len(schemes))
+                # _info("schemes is %s"%info[3])
+                # _info("schemes encode is %s"%schemes)
+                # _info("schemes length is %d"%len(schemes))
                 schemeList[appInfo.trackid] = appInfo.toDict()
 
             content = ""
@@ -107,9 +107,9 @@ def _generate(mysqlConn, mysqlCur, indent=False):
         appInfo.icon512 = info[5]
 
         schemes = appInfo.scheme
-        _info("schemes is %s"%info[3])
-        _info("schemes encode is %s"%schemes)
-        _info("schemes length is %d"%len(schemes))
+        # _info("schemes is %s"%info[3])
+        # _info("schemes encode is %s"%schemes)
+        # _info("schemes length is %d"%len(schemes))
         schemeList[appInfo.trackid] = appInfo.toDict()
 
     content = ""
@@ -119,6 +119,47 @@ def _generate(mysqlConn, mysqlCur, indent=False):
         content = json.dumps(schemeList)
     targetPath = os.path.join(targetFolder, "extSchemeApps.json")
     open(targetPath, "w").write(content)
+
+def _clearAppName(mysqlConn, mysqlCur):
+    cmd = 'select name from appstores;'
+
+    mysqlCur.execute(cmd)
+    names = mysqlCur.fetchall()
+    seps = ["-", "–", "（", "(", "－", "—"]
+
+    changed = open("changed.txt", "w")
+    noChanged = open("noChanged.txt", "w")
+
+    for i in names:
+        name = i[0]
+        haveSep = False
+        index = -1
+        for sep in seps:
+            tIndex = name.find(sep)
+            if tIndex >= 0:
+                if index == -1:
+                    index = tIndex
+                else:
+                    if tIndex < index:
+                        index = tIndex
+
+        if index > 0:
+            haveSep = True
+            changed.write("%s %s %s\n"%(name, "***", name[0:index].strip()))
+
+        if not haveSep:
+            noChanged.write("# "+name+"\n")
+
+        # print "#@changed", len(changed)
+        # for i in changed:
+        #     print i
+
+        # print "unchanged", len(noChanged)
+        # for i in noChanged:
+        #     print i
+
+
+
 
 
 import AppStoreConstants
